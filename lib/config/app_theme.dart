@@ -85,7 +85,7 @@ class AppTheme {
     ),
     bodyMedium: GoogleFonts.poppins(
       fontSize: 14,
-      color: textColor.withOpacity(0.8),
+      color: textColor.withValues(alpha: 0.8),
     ),
     labelLarge: GoogleFonts.poppins(
       fontSize: 16,
@@ -121,7 +121,7 @@ class GradientButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.25),
+            color: Colors.black.withValues(alpha: 0.25),
             blurRadius: 6,
             offset: const Offset(0, 4),
           ),
@@ -170,7 +170,7 @@ class GradientCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: Colors.black.withValues(alpha: 0.15),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
