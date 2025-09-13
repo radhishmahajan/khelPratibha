@@ -8,7 +8,7 @@ class AppTheme {
   static const Color accentColor = Color(0xFF4CAF50);
   static const Color errorColor = Color(0xFFD32F2F);
 
-  // Light theme (note: CardTheme is NOT prefixed with `const`)
+  // Light theme
   static final ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
@@ -27,20 +27,18 @@ class AppTheme {
     textTheme: _buildTextTheme(const Color(0xFF333333)),
     elevatedButtonTheme: _buildElevatedButtonTheme(primaryColor),
     inputDecorationTheme: _buildInputDecorationTheme(const Color(0xFFE0E0E0)),
-
-    // <-- Safe (non-const) CardTheme to avoid const-expression errors
-    // cardTheme: CardTheme(
-    //   elevation: 2,
-    //   shape: RoundedRectangleBorder(
-    //     borderRadius: BorderRadius.circular(12),
-    //   ),
-    // ),
-
+    // CORRECTED: Changed CardTheme to CardThemeData
+    cardTheme: CardThemeData(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+    ),
     colorScheme: const ColorScheme.light(
       primary: primaryColor,
       secondary: accentColor,
       error: errorColor,
-      background: Color(0xFFF5F5F5),
+      surface: Colors.white, // Card background
     ),
   );
 
@@ -63,20 +61,19 @@ class AppTheme {
     textTheme: _buildTextTheme(Colors.white),
     elevatedButtonTheme: _buildElevatedButtonTheme(primaryColor),
     inputDecorationTheme: _buildInputDecorationTheme(const Color(0xFF424242)),
-
-    // <-- same safe pattern here
-    //   cardTheme: CardTheme(
-    //   elevation: 4,
-    //   shape: RoundedRectangleBorder(
-    //     borderRadius: BorderRadius.circular(12),
-    //   ),
-    // ),
-
+    // CORRECTED: Changed CardTheme to CardThemeData
+    cardTheme: CardThemeData(
+      elevation: 4,
+      color: const Color(0xFF1E1E1E),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+    ),
     colorScheme: const ColorScheme.dark(
       primary: primaryColor,
       secondary: accentColor,
       error: errorColor,
-      background: Color(0xFF121212),
+      surface: Color(0xFF1E1E1E), // Card background
     ),
   );
 
@@ -90,7 +87,7 @@ class AppTheme {
       displaySmall: GoogleFonts.poppins(
           fontSize: 20, fontWeight: FontWeight.w600, color: textColor),
       bodyLarge: GoogleFonts.poppins(fontSize: 16, color: textColor),
-      bodyMedium: GoogleFonts.poppins(fontSize: 14, color: textColor.withOpacity(0.8)),
+      bodyMedium: GoogleFonts.poppins(fontSize: 14, color: textColor.withValues(alpha: 0.8)),
       labelLarge: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: textColor),
     );
   }
@@ -126,7 +123,6 @@ class AppTheme {
   }
 }
 
-/// Reusable AppCard that handles padding, color and elevation centrally.
 class AppCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry margin;
@@ -145,7 +141,8 @@ class AppCard extends StatelessWidget {
     return Padding(
       padding: margin,
       child: Card(
-        color: color ?? Theme.of(context).colorScheme.surface,
+        // Use the color and elevation from the theme by default
+        color: color ?? Theme.of(context).cardTheme.color,
         elevation: elevation,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Padding(
@@ -156,3 +153,4 @@ class AppCard extends StatelessWidget {
     );
   }
 }
+

@@ -23,7 +23,6 @@ class _AuthGateState extends State<AuthGate> {
     Supabase.instance.client.auth.onAuthStateChange.listen((data) {
       final Session? session = data.session;
       if (session != null) {
-        // When a user logs in, fetch their profile immediately.
         context.read<UserProvider>().fetchUserProfile(session.user.id);
       } else {
         // When a user logs out, clear their data.

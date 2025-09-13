@@ -9,13 +9,10 @@ class AiAnalysisService {
   /// Analyzes metrics, creates a full assessment object, saves it, and returns it.
   Future<Assessment> getAnalysis({
     required String playerId,
-    required String coachId,
     required Map<String, double> metrics,
   }) async {
-    // Simulate network delay for analysis
     await Future.delayed(const Duration(seconds: 2));
 
-    // Convert map to a list of PerformanceMetric objects for analysis
     final metricList = metrics.entries
         .map((e) => PerformanceMetric(name: e.key, value: e.value))
         .toList();
@@ -64,7 +61,6 @@ class AiAnalysisService {
     final newAssessment = Assessment(
       id: const Uuid().v4(), // Generate a unique ID
       playerId: playerId,
-      coachId: coachId,
       date: DateTime.now(),
       metrics: metrics,
       analysis: summary,

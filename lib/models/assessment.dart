@@ -1,10 +1,7 @@
-import 'package:flutter/foundation.dart';
-
 /// A data model representing a single performance assessment for a player.
 class Assessment {
   final String id;
   final String playerId;
-  final String coachId;
   final DateTime date;
   final Map<String, double> metrics;
   final String analysis; // AI-generated analysis text
@@ -13,7 +10,6 @@ class Assessment {
   Assessment({
     required this.id,
     required this.playerId,
-    required this.coachId,
     required this.date,
     required this.metrics,
     required this.analysis,
@@ -24,7 +20,6 @@ class Assessment {
     return Assessment(
       id: map['id'] ?? '',
       playerId: map['player_id'] ?? '',
-      coachId: map['coach_id'] ?? '',
       date: DateTime.parse(map['date']),
       metrics: Map<String, double>.from(map['metrics'] ?? {}),
       analysis: map['analysis'] ?? 'No analysis available.',
@@ -38,7 +33,6 @@ class Assessment {
     return {
       'id': id,
       'player_id': playerId,
-      'coach_id': coachId,
       // CORRECTED: Fixed typo from toIso8201String to toIso8601String
       'date': date.toIso8601String(),
       'metrics': metrics,

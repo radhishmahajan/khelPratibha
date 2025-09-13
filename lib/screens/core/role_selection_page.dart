@@ -21,8 +21,6 @@ class RoleSelectionPage extends StatelessWidget {
     );
 
     final updatedProfile = profile.copyWith(role: role);
-
-    // This one call will save the data AND update the UI state
     await userProvider.saveUserProfile(updatedProfile);
   }
 
@@ -43,16 +41,11 @@ class RoleSelectionPage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             RoleCard(
-              icon: Icons.school,
-              title: "Coach",
-              onTap: () => _onRoleSelected(context, UserRole.coach),
-            ),
-            const SizedBox(height: 16),
-            RoleCard(
               icon: Icons.search,
               title: "Scout",
               onTap: () => _onRoleSelected(context, UserRole.scout),
             ),
+            // REMOVED the RoleCard for "Coach"
           ],
         ),
       ),
@@ -99,4 +92,3 @@ class RoleCard extends StatelessWidget {
     );
   }
 }
-

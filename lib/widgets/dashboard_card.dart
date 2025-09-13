@@ -29,7 +29,7 @@ class DashboardCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 24,
-                backgroundColor: color.withOpacity(0.1),
+                backgroundColor: color.withValues(alpha: 0.1),
                 child: Icon(icon, size: 28, color: color),
               ),
               const Spacer(),
