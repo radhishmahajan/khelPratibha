@@ -16,8 +16,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
   static Future<void> initialize() async {
     await Supabase.initialize(
       // IMPORTANT: Replace these placeholders with your actual Supabase credentials.
-      url: 'https://gmkzigozmguakrkeefbz.supabase.co',
-      anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdta3ppZ296bWd1YWtya2VlZmJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY4ODEwMTUsImV4cCI6MjA3MjQ1NzAxNX0.qHc8mRr1lV0A57_BU0RGgIXYEFPYhIzo8DqKfKuXnl4',
+      url: 'supabase url',
+      anonKey: 'anon key',
     );
   }
 
@@ -32,4 +32,5 @@ import 'package:supabase_flutter/supabase_flutter.dart';
   /// ```
   static SupabaseClient get client => Supabase.instance.client;
 }
+
 
