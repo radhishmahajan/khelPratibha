@@ -1,88 +1,72 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'auth_gate.dart';
+import 'package:khelpratibha/api/supabase_client.dart';
+import 'package:khelpratibha/providers/user_provider.dart';
+import 'package:khelpratibha/screens/core/auth_gate.dart';
+import 'package:khelpratibha/services/ai_analysis_service.dart';
+import 'package:khelpratibha/services/auth_service.dart';
+import 'package:khelpratibha/services/database_service.dart';
+import 'package:provider/provider.dart';
 
-Future<void> main() async {
+void main() async {
+  // Ensure Flutter bindings are initialized before calling async code.
   WidgetsFlutterBinding.ensureInitialized();
-  await Supabase.initialize(
-    url: 'https://gmkzigozmguakrkeefbz.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdta3ppZ296bWd1YWtya2VlZmJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY4ODEwMTUsImV4cCI6MjA3MjQ1NzAxNX0.qHc8mRr1lV0A57_BU0RGgIXYEFPYhIzo8DqKfKuXnl4',
-  );
+
+  // Initialize your Supabase client. This must be done before runApp.
+  // CORRECTED: Changed Supabase_ to SupabaseManager
+  await SupabaseClientManager.initialize();
 
   runApp(const MyApp());
 }
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Exercise Tracker',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
-          scaffoldBackgroundColor: const Color(0xFF1A1A2E),
-          primaryColor: const Color(0xFFE94560),
-          colorScheme: const ColorScheme.dark(
-            primary: Color(0xFFE94560),
-            secondary: Color(0xFF0F3460),
-            surface: Color(0xFF16213E),
-            error: Color(0xFFFF4C61),
-            onPrimary: Colors.white,
-            onSecondary: Colors.white,
-            onSurface: Colors.white70,
-          ),
-          textTheme: GoogleFonts.interTextTheme(
-            ThemeData.dark().textTheme.apply(
-              bodyColor: Colors.white,
-              displayColor: Colors.white,
-            ),
-          ),
-          appBarTheme: const AppBarTheme(
-            backgroundColor: Color(0xFF16213E),
-            foregroundColor: Colors.white,
-            elevation: 0,
+    return MultiProvider(
+      providers: [
+        // 1. AuthService: Manages user authentication state.
+        Provider<AuthService>(create: (_) => AuthService()),
+
+        // 2. DatabaseService: Handles all direct database interactions.
+        Provider<DatabaseService>(create: (_) => DatabaseService()),
+
+        // 3. UserProvider: Depends on DatabaseService.
+        //    It uses a ProxyProvider to get the DatabaseService instance.
+        ChangeNotifierProxyProvider<DatabaseService, UserProvider>(
+          create: (context) => UserProvider(context.read<DatabaseService>()),
+          update: (context, dbService, previous) => UserProvider(dbService),
+        ),
+
+        // 4. AiAnalysisService: Also depends on DatabaseService.
+        //    This ProxyProvider creates the AiAnalysisService and gives it the
+        //    DatabaseService it needs to function correctly.
+        ProxyProvider<DatabaseService, AiAnalysisService>(
+          update: (context, dbService, previous) => AiAnalysisService(dbService),
+        ),
+      ],
+      child: MaterialApp(
+        title: 'Khel Pratibha',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+          textTheme: const TextTheme(
+            displayMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            headlineMedium: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE94560),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
             ),
           ),
-          inputDecorationTheme: InputDecorationTheme(
-            filled: true,
-            fillColor: const Color(0xFF0F3460),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE94560)),
-            ),
-            hintStyle: TextStyle(color: Colors.white54),
-            prefixIconColor: Colors.white54,
-          ),
-
-          // ▼▼▼ THIS IS THE CORRECTED LINE ▼▼▼
-          cardTheme: CardThemeData(
-            color: const Color(0xFF16213E),
-            elevation: 5,
-            shadowColor: Colors.black.withValues(alpha: 0.5),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-
-          snackBarTheme: const SnackBarThemeData(
-            backgroundColor: Color(0xFF0F3460),
-            contentTextStyle: TextStyle(color: Colors.white),
-          )
+        ),
+        home: const AuthGate(),
       ),
-      home: const AuthGate(),
     );
   }
 }
+
