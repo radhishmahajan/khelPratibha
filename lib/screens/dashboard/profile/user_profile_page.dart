@@ -20,7 +20,14 @@ class ProfilePage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
+              // First, sign the user out.
               await context.read<AuthService>().signOut();
+
+              // THEN, pop all pages off the navigation stack until we get back to the root.
+              // This ensures the AuthGate becomes the visible screen again.
+              if (context.mounted) {
+                Navigator.of(context).popUntil((route) => route.isFirst);
+              }
             },
           ),
         ],
