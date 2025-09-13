@@ -8,56 +8,55 @@ import 'package:khelpratibha/utils/navigation_helper.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class AuthGate extends StatefulWidget {
+class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
   @override
-  State<AuthGate> createState() => _AuthGateState();
-}
+  Widget build(BuildContext context) {
+    // Listen to the auth state stream from your AuthService.
+    return StreamBuilder<AuthState>(
+      stream: context.watch<AuthService>().authStateChanges,
+      builder: (context, snapshot) {
+        // While waiting for the first auth event, show a loading screen.
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
 
-class _AuthGateState extends State<AuthGate> {
-  @override
-  void initState() {
-    super.initState();
-    // Start listening to auth changes as soon as the widget is initialized.
-    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
-      final Session? session = data.session;
-      if (session != null) {
-        context.read<UserProvider>().fetchUserProfile(session.user.id);
-      } else {
-        // When a user logs out, clear their data.
-        context.read<UserProvider>().clearUserProfile();
-      }
-    });
+        final session = snapshot.data?.session;
+
+        if (session != null) {
+          // If a user is logged in, use a FutureBuilder to load their profile.
+          // This ensures data fetching happens outside of the main build cycle.
+          return FutureBuilder(
+            future: _getProfile(context, session.user.id),
+            builder: (context, profileSnapshot) {
+              if (profileSnapshot.connectionState == ConnectionState.waiting) {
+                return const Scaffold(body: Center(child: CircularProgressIndicator()));
+              }
+
+              // After fetching, watch the provider for the profile data.
+              final userProfile = context.watch<UserProvider>().userProfile;
+
+              if (userProfile == null || userProfile.role == UserRole.unknown) {
+                return const RoleSelectionPage();
+              } else {
+                return NavigationHelper.getDashboardFromRole(userProfile.role);
+              }
+            },
+          );
+        } else {
+          // If no session, show the login page.
+          return const LoginPage();
+        }
+      },
+    );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // Watch both the auth service and user provider for changes.
-    final authService = context.watch<AuthService>();
-    final userProvider = context.watch<UserProvider>();
-    final session = authService.currentSession;
-
-    if (session != null) {
-      // If the user is logged in, we determine the state of their profile.
-      if (userProvider.isLoading) {
-        // If the profile is actively being fetched, show a loading spinner.
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
-      }
-
-      // If loading is finished, but the profile is null or the role is unknown,
-      // the user needs to select their role. This handles new users correctly.
-      if (userProvider.userProfile == null || userProvider.userProfile!.role == UserRole.unknown) {
-        return const RoleSelectionPage();
-      }
-
-      // If we have a profile with a known role, navigate to their dashboard.
-      return NavigationHelper.getDashboardFromRole(userProvider.userProfile!.role);
-
-    } else {
-      // If there is no session, the user is not logged in.
-      return const LoginPage();
+  // This helper function ensures we only fetch the profile if it's not already in the provider.
+  Future<void> _getProfile(BuildContext context, String userId) async {
+    final userProvider = context.read<UserProvider>();
+    if (userProvider.userProfile?.id != userId) {
+      await userProvider.fetchUserProfile(userId);
     }
   }
 }
-

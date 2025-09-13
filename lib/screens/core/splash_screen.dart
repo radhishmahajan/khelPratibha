@@ -17,10 +17,11 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void _navigateToHome() async {
-    // Simulate a delay for branding visibility and initial checks
+    // Keep the delay for branding, but remove all data fetching.
     await Future.delayed(const Duration(seconds: 3));
 
     if (mounted) {
+      // Navigate directly to the AuthGate. It will handle the rest.
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const AuthGate()),
       );
@@ -35,7 +36,7 @@ class _SplashScreenState extends State<SplashScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Lottie.asset(
-              'assets/animations/trophy.json', // Engaging Lottie animation
+              'assets/animations/trophy.json',
               width: 200,
               height: 200,
             ),

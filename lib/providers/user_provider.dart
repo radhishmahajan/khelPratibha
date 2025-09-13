@@ -3,35 +3,30 @@ import 'package:khelpratibha/models/user_profile.dart';
 import 'package:khelpratibha/services/database_service.dart';
 
 class UserProvider extends ChangeNotifier {
-  // CORRECTED: Accepts the DatabaseService via the constructor
-  // instead of creating its own instance.
   final DatabaseService _db;
   UserProvider(this._db);
 
   UserProfile? _userProfile;
-  bool _isLoading = false;
+  // The isLoading flag can be removed as FutureBuilder will manage loading states.
+  // bool _isLoading = false;
 
   UserProfile? get userProfile => _userProfile;
-  bool get isLoading => _isLoading;
+  // bool get isLoading => _isLoading;
 
   Future<void> fetchUserProfile(String userId) async {
-    _isLoading = true;
-    notifyListeners();
+    // We don't notify listeners at the start anymore.
     try {
       _userProfile = await _db.fetchUserProfile(userId);
     } finally {
-      _isLoading = false;
+      // We only notify listeners once, after the data fetching is complete.
       notifyListeners();
     }
   }
 
   Future<void> saveUserProfile(UserProfile profile) async {
-    _isLoading = true;
-    notifyListeners();
     try {
       _userProfile = await _db.upsertUserProfile(profile);
     } finally {
-      _isLoading = false;
       notifyListeners();
     }
   }
@@ -47,4 +42,3 @@ class UserProvider extends ChangeNotifier {
     notifyListeners();
   }
 }
-
