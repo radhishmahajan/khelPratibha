@@ -31,4 +31,10 @@ class NavigationHelper {
       MaterialPageRoute(builder: (context) => page),
     );
   }
+
+  static void navigateToPageReplaced(BuildContext context, Widget page) {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => page),
+    );
+  }
 }

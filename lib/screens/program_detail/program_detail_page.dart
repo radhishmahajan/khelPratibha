@@ -11,23 +11,21 @@ class ProgramDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
-      child: SafeArea(
-        child: Scaffold(
-          appBar: AppBar(
-            title: Text('${program.title} Program'),
-            bottom: const TabBar(
-              tabs: [
-                Tab(text: 'Select Categories'),
-                Tab(text: 'Requirements & Info'),
-              ],
-            ),
-          ),
-          body: TabBarView(
-            children: [
-              CategorySelectionTab(program: program),
-              const RequirementsInfoTab(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('${program.title} Program'),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Select Categories'),
+              Tab(text: 'Requirements & Info'),
             ],
           ),
+        ),
+        body: TabBarView(
+          children: [
+            CategorySelectionTab(program: program),
+            const RequirementsInfoTab(),
+          ],
         ),
       ),
     );

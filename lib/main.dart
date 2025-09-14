@@ -4,10 +4,13 @@ import 'package:khelpratibha/api/supabase_client.dart';
 import 'package:khelpratibha/config/app_theme.dart';
 import 'package:khelpratibha/providers/user_provider.dart';
 import 'package:khelpratibha/screens/core/splash_screen.dart';
-import 'package:khelpratibha/services/ai_analysis_service.dart';
 import 'package:khelpratibha/services/auth_service.dart';
 import 'package:khelpratibha/services/database_service.dart';
+import 'package:khelpratibha/services/storage_service.dart'; // Import StorageService
 import 'package:provider/provider.dart';
+import 'package:khelpratibha/services/analysis_service.dart';
+import 'package:khelpratibha/providers/session_provider.dart';
+import 'package:khelpratibha/providers/achievement_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,12 +28,19 @@ class MyApp extends StatelessWidget {
       providers: [
         Provider<AuthService>(create: (_) => AuthService()),
         Provider<DatabaseService>(create: (_) => DatabaseService()),
+        Provider<StorageService>(create: (_) => StorageService()), // Add StorageService here
         ChangeNotifierProxyProvider<DatabaseService, UserProvider>(
           create: (context) => UserProvider(context.read<DatabaseService>()),
           update: (context, dbService, previous) => UserProvider(dbService),
         ),
-        ProxyProvider<DatabaseService, AiAnalysisService>(
-          update: (context, dbService, previous) => AiAnalysisService(dbService),
+        Provider<AnalysisService>(create: (_) => AnalysisService()),
+        ChangeNotifierProxyProvider<DatabaseService, SessionProvider>(
+          create: (context) => SessionProvider(context.read<DatabaseService>()),
+          update: (context, dbService, previous) => SessionProvider(dbService),
+        ),
+        ChangeNotifierProxyProvider<DatabaseService, AchievementProvider>(
+          create: (context) => AchievementProvider(context.read<DatabaseService>()),
+          update: (context, dbService, previous) => AchievementProvider(dbService),
         ),
       ],
       child: MaterialApp(

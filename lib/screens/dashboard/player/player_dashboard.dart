@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:khelpratibha/data/program_data.dart';
 import 'package:khelpratibha/models/sport_category.dart';
 import 'package:khelpratibha/models/sport_program.dart';
 import 'package:khelpratibha/screens/dashboard/common/generic_dashboard_scaffold.dart';
-import 'package:khelpratibha/screens/program_detail/program_detail_page.dart'; // <-- IMPORT THE NEW PAGE
+import 'package:khelpratibha/screens/program_detail/program_detail_page.dart';
 
 class PlayerDashboard extends StatelessWidget {
   final SportCategory category;
@@ -15,7 +14,6 @@ class PlayerDashboard extends StatelessWidget {
         category.name[0].toUpperCase() + category.name.substring(1);
 
     void onProgramTap(SportProgram program) {
-      // Navigate to the new, tabbed detail page when a program is tapped
       Navigator.of(context).push(MaterialPageRoute(
         builder: (context) => ProgramDetailPage(program: program),
       ));
@@ -25,10 +23,8 @@ class PlayerDashboard extends StatelessWidget {
       appBarTitle: '$categoryName Programs',
       headerTitle: 'Choose Your Program',
       headerSubtitle: 'Select a sport to begin your assessment journey.',
-      programs: category == SportCategory.olympics
-          ? olympicPrograms
-          : paralympicPrograms,
       onProgramTap: onProgramTap,
+      category: category,
     );
   }
 }

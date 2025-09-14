@@ -25,7 +25,7 @@ class AuthGate extends StatelessWidget {
 
         if (session != null) {
           return FutureBuilder(
-            future: _getProfile(context, session.user.id),
+            future: _getInitialData(context, session.user.id),
             builder: (context, profileSnapshot) {
               if (profileSnapshot.connectionState == ConnectionState.waiting) {
                 return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -64,10 +64,7 @@ class AuthGate extends StatelessWidget {
     );
   }
 
-  Future<void> _getProfile(BuildContext context, String userId) async {
-    final userProvider = context.read<UserProvider>();
-    if (userProvider.userProfile?.id != userId) {
-      await userProvider.fetchUserProfile(userId);
-    }
+  Future<void> _getInitialData(BuildContext context, String userId) async {
+    await context.read<UserProvider>().fetchInitialData(userId);
   }
 }

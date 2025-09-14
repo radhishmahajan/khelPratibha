@@ -19,7 +19,6 @@ class UserProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      // Fetch user profile and joined programs in parallel
       final profileFuture = _db.fetchUserProfile(userId);
       final programsFuture = _db.fetchJoinedProgramIds(userId);
 
@@ -41,12 +40,19 @@ class UserProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> leaveProgram({required String programId}) async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null || !_joinedProgramIds.contains(programId)) return;
+
+    await _db.leaveProgram(userId: userId, programId: programId);
+    _joinedProgramIds.remove(programId);
+    notifyListeners();
+  }
+
   Future<void> fetchUserProfile(String userId) async {
-    // We don't notify listeners at the start anymore.
     try {
       _userProfile = await _db.fetchUserProfile(userId);
     } finally {
-      // We only notify listeners once, after the data fetching is complete.
       notifyListeners();
     }
   }
@@ -59,7 +65,6 @@ class UserProvider extends ChangeNotifier {
     }
   }
 
-  /// A method to update the local state immediately after a profile edit.
   void setUserProfile(UserProfile profile) {
     _userProfile = profile;
     notifyListeners();

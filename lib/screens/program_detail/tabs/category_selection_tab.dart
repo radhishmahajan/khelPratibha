@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:khelpratibha/data/program_data.dart';
 import 'package:khelpratibha/models/sport_event.dart';
 import 'package:khelpratibha/models/sport_program.dart';
-import 'package:khelpratibha/screens/dashboard/common/placeholder_page.dart';
+import 'package:khelpratibha/providers/user_provider.dart';
 import 'package:khelpratibha/screens/performance_dashboard/performance_dashboard_page.dart';
+import 'package:khelpratibha/services/database_service.dart';
 import 'package:khelpratibha/utils/navigation_helper.dart';
+import 'package:provider/provider.dart';
 
 class CategorySelectionTab extends StatefulWidget {
   final SportProgram program;
@@ -19,28 +20,12 @@ class _CategorySelectionTabState extends State<CategorySelectionTab> {
   String? _selectedGender;
   SportEvent? _selectedEvent;
 
-  List<SportEvent> _events = [];
+  late Future<List<SportEvent>> _eventsFuture;
 
   @override
   void initState() {
     super.initState();
-    switch (widget.program.title) {
-      case 'Sprinting':
-        _events = sprintEvents;
-        break;
-      case 'Hurdles':
-        _events = hurdleEvents;
-        break;
-      case 'High Jump':
-        _events = highJumpEvents;
-      case 'Long Jump':
-        _events = longJumpEvents;
-      case 'Shot Put':
-        _events = shotPutEvents;
-      default:
-        _events = [const SportEvent(name: 'Standard Event', description: '')];
-        break;
-    }
+    _eventsFuture = context.read<DatabaseService>().fetchEventsForProgram(widget.program.id);
   }
 
   @override
@@ -71,47 +56,92 @@ class _CategorySelectionTabState extends State<CategorySelectionTab> {
           onSelected: (value) => setState(() => _selectedGender = value),
         ),
         const SizedBox(height: 24),
-        _buildCategorySection(
-          icon: Icons.event,
-          title: 'Event/Discipline',
-          // The options are now dynamically loaded
-          options: _events.map((e) => e.name).toList(),
-          selectedValue: _selectedEvent?.name,
-          onSelected: (value) => setState(() => _selectedEvent = _events.firstWhere((e) => e.name == value)),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  Icon(Icons.event, color: theme.colorScheme.primary),
+                  const SizedBox(width: 8),
+                  Text('Event/Discipline', style: theme.textTheme.titleLarge),
+                ]),
+                const SizedBox(height: 16),
+                FutureBuilder<List<SportEvent>>(
+                  future: _eventsFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (snapshot.hasError) {
+                      return const Center(child: Text('Could not load events.'));
+                    }
+                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return const Center(child: Text('No events found for this program.'));
+                    }
+
+                    final events = snapshot.data!;
+                    return Wrap(
+                      spacing: 8.0,
+                      runSpacing: 8.0,
+                      children: events.map((event) {
+                        final isSelected = _selectedEvent?.id == event.id;
+                        return ChoiceChip(
+                          label: Text(event.name),
+                          selected: isSelected,
+                          onSelected: (_) => setState(() => _selectedEvent = event),
+                          selectedColor: theme.colorScheme.primary,
+                          labelStyle: TextStyle(color: isSelected ? Colors.white : theme.colorScheme.onSurface),
+                        );
+                      }).toList(),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
         ),
         const SizedBox(height: 40),
-        if(canStart) Card(
-            color: theme.colorScheme.primary.withValues(alpha: 0.1),
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Your Selection', style: theme.textTheme.titleMedium),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: [
-                      Chip(label: Text('Age: $_selectedAgeGroup')),
-                      Chip(label: Text('Gender: $_selectedGender')),
-                      Chip(label: Text('Event: ${_selectedEvent!.name}')),
-                    ],
-                  ),
-                ],
-              ),
-            )
-        ),
+        if (canStart)
+          Card(
+              color: theme.colorScheme.primary.withAlpha(26),
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Your Selection', style: theme.textTheme.titleMedium),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        Chip(label: Text('Age: $_selectedAgeGroup')),
+                        Chip(label: Text('Gender: $_selectedGender')),
+                        Chip(label: Text('Event: ${_selectedEvent!.name}')),
+                      ],
+                    ),
+                  ],
+                ),
+              )),
         const SizedBox(height: 16),
         ElevatedButton(
-          onPressed: canStart ? () {
-            NavigationHelper.navigateToPage(context, const PerformanceDashboardPage());
-          } : null,
+          onPressed: canStart
+              ? () {
+            context
+                .read<UserProvider>()
+                .joinProgram(programId: widget.program.id);
+            NavigationHelper.navigateToPageReplaced(
+                context, PerformanceDashboardPage(program: widget.program));
+          }
+              : null,
           child: const Text('Start Training Program'),
         ),
       ],
     );
   }
+
   Widget _buildCategorySection({
     required IconData icon,
     required String title,
@@ -142,7 +172,9 @@ class _CategorySelectionTabState extends State<CategorySelectionTab> {
                   selected: isSelected,
                   onSelected: (_) => onSelected(option),
                   selectedColor: theme.colorScheme.primary,
-                  labelStyle: TextStyle(color: isSelected ? Colors.white : theme.colorScheme.onSurface),
+                  labelStyle: TextStyle(
+                      color:
+                      isSelected ? Colors.white : theme.colorScheme.onSurface),
                 );
               }).toList(),
             ),

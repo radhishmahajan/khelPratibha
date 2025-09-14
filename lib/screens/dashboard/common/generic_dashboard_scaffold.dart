@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:khelpratibha/config/app_theme.dart';
+import 'package:khelpratibha/models/sport_category.dart';
 import 'package:khelpratibha/models/sport_program.dart';
 import 'package:khelpratibha/providers/user_provider.dart';
 import 'package:khelpratibha/screens/dashboard/profile/user_profile_page.dart';
 import 'package:khelpratibha/screens/performance_dashboard/performance_dashboard_page.dart';
 import 'package:khelpratibha/screens/program_detail/program_detail_page.dart';
+import 'package:khelpratibha/services/database_service.dart';
 import 'package:khelpratibha/utils/navigation_helper.dart';
 import 'package:khelpratibha/widgets/profile_avatar.dart';
 import 'package:khelpratibha/widgets/sport_program_card.dart';
@@ -14,16 +16,16 @@ class GenericDashboardScaffold extends StatefulWidget {
   final String appBarTitle;
   final String headerTitle;
   final String headerSubtitle;
-  final List<SportProgram> programs;
-  final Function(SportProgram) onProgramTap; // Callback for card taps
+  final Function(SportProgram) onProgramTap;
+  final SportCategory category;
 
   const GenericDashboardScaffold({
     super.key,
     required this.appBarTitle,
     required this.headerTitle,
     required this.headerSubtitle,
-    required this.programs,
-    required this.onProgramTap, // Added to constructor
+    required this.onProgramTap,
+    required this.category,
   });
 
   @override
@@ -32,8 +34,10 @@ class GenericDashboardScaffold extends StatefulWidget {
 }
 
 class _GenericDashboardScaffoldState extends State<GenericDashboardScaffold> {
-  late List<SportProgram> _filteredPrograms;
-  String? _selectedCategoryFilter;
+  late Future<List<SportProgram>> _programsFuture;
+  List<SportProgram> _allPrograms = [];
+  List<SportProgram> _filteredPrograms = [];
+  String? _selectedSubCategoryFilter;
   double _minAthleteCount = 0;
   double _minEventCount = 0;
 
@@ -41,17 +45,25 @@ class _GenericDashboardScaffoldState extends State<GenericDashboardScaffold> {
   @override
   void initState() {
     super.initState();
-    _filteredPrograms = List.from(widget.programs);
+    _programsFuture = context.read<DatabaseService>().fetchPrograms(category: widget.category);
+    _programsFuture.then((programs) {
+      if (mounted) {
+        setState(() {
+          _allPrograms = programs;
+          _filteredPrograms = List.from(_allPrograms);
+        });
+      }
+    });
   }
 
   void _applyFilters() {
     setState(() {
-      _filteredPrograms = widget.programs.where((program) {
-        final categoryMatch = _selectedCategoryFilter == null ||
-            program.category == _selectedCategoryFilter;
+      _filteredPrograms = _allPrograms.where((program) {
+        final subCategoryMatch = _selectedSubCategoryFilter == null ||
+            program.subCategory == _selectedSubCategoryFilter;
         final athleteMatch = program.athleteCount >= _minAthleteCount;
         final eventMatch = program.eventCount >= _minEventCount;
-        return categoryMatch && athleteMatch && eventMatch;
+        return subCategoryMatch && athleteMatch && eventMatch;
       }).toList();
     });
   }
@@ -60,20 +72,19 @@ class _GenericDashboardScaffoldState extends State<GenericDashboardScaffold> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      // Use theme color for the bottom sheet background
       backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
         return FilterBottomSheet(
-          initialCategory: _selectedCategoryFilter,
+          initialCategory: _selectedSubCategoryFilter,
           initialAthleteCount: _minAthleteCount,
           initialEventCount: _minEventCount,
-          allPrograms: widget.programs,
+          allPrograms: _allPrograms,
           onApplyFilters: (category, athletes, events) {
             setState(() {
-              _selectedCategoryFilter = category;
+              _selectedSubCategoryFilter = category;
               _minAthleteCount = athletes;
               _minEventCount = events;
               _applyFilters();
@@ -97,7 +108,6 @@ class _GenericDashboardScaffoldState extends State<GenericDashboardScaffold> {
               fontWeight: FontWeight.bold,
               color: Colors.white,
             )),
-        // Enhanced AppBar with a gradient background
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -119,7 +129,7 @@ class _GenericDashboardScaffoldState extends State<GenericDashboardScaffold> {
               onTap: () =>
                   NavigationHelper.navigateToPage(context, const ProfilePage()),
               child: Hero(
-                tag: "user-avatar", // Hero animation tag
+                tag: "user-avatar",
                 child:
                 ProfileAvatar(imageUrl: userProfile?.avatarUrl, radius: 20),
               ),
@@ -127,71 +137,84 @@ class _GenericDashboardScaffoldState extends State<GenericDashboardScaffold> {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
-        children: [
-          Text(
-            widget.headerTitle,
-            style: theme.textTheme.headlineMedium
-                ?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            widget.headerSubtitle,
-            style: theme.textTheme.bodyLarge,
-          ),
-          const SizedBox(height: 24),
-          // AnimatedSwitcher provides a smooth transition when filters are applied
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 500),
-            child: _filteredPrograms.isEmpty
-                ? const Center(
-              key: ValueKey('empty'),
-              child: Padding(
-                padding: EdgeInsets.all(32.0),
-                child: Text('🚫 No programs match your filters.'),
-              ),
-            )
-                : GridView.builder(
-              key: ValueKey(_filteredPrograms.length),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 0.6,
-              ),
-              itemCount: _filteredPrograms.length,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemBuilder: (context, index) {
-                final program = _filteredPrograms[index];
-                final isJoined = joinedProgramIds.contains(program.id);
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16.0),
+          children: [
+            Text(
+              widget.headerTitle,
+              style: theme.textTheme.headlineMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              widget.headerSubtitle,
+              style: theme.textTheme.bodyLarge,
+            ),
+            const SizedBox(height: 24),
+            FutureBuilder<List<SportProgram>>(
+              future: _programsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text('No programs available.'));
+                } else {
+                  return AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 500),
+                    child: _filteredPrograms.isEmpty
+                        ? const Center(
+                      key: ValueKey('empty'),
+                      child: Padding(
+                        padding: EdgeInsets.all(32.0),
+                        child: Text('🚫 No programs match your filters.'),
+                      ),
+                    )
+                        : GridView.builder(
+                      key: ValueKey(_filteredPrograms.length),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        childAspectRatio: 0.6,
+                      ),
+                      itemCount: _filteredPrograms.length,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemBuilder: (context, index) {
+                        final program = _filteredPrograms[index];
+                        final isJoined = joinedProgramIds.contains(program.id);
 
-                return SportProgramCard(
-                  program: program,
-                  isJoined: isJoined,
-                  onTap: () {
-                    if (isJoined) {
-                      Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => const PerformanceDashboardPage(),
-                      ));
-                    } else {
-                      Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => ProgramDetailPage(program: program),
-                      ));
-                    }
-                  },
-                );
+                        return SportProgramCard(
+                          program: program,
+                          isJoined: isJoined,
+                          onTap: () {
+                            if (isJoined) {
+                              Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => PerformanceDashboardPage(program: program),
+                              ));
+                            } else {
+                              Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => ProgramDetailPage(program: program),
+                              ));
+                            }
+                          },
+                        );
+                      },
+                    ),
+                  );
+                }
               },
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-// --- The Filter Bottom Sheet Widget (Restyled for Dark Theme) ---
 class FilterBottomSheet extends StatefulWidget {
   final String? initialCategory;
   final double initialAthleteCount;
@@ -215,7 +238,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   String? _selectedCategory;
   late double _athleteCount;
   late double _eventCount;
-  late final List<String> _uniqueCategories;
+  late final List<String> _uniqueSubCategories;
 
   @override
   void initState() {
@@ -223,8 +246,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     _selectedCategory = widget.initialCategory;
     _athleteCount = widget.initialAthleteCount;
     _eventCount = widget.initialEventCount;
-    _uniqueCategories =
-        widget.allPrograms.map((p) => p.category).toSet().toList();
+    _uniqueSubCategories =
+        widget.allPrograms.map((p) => p.subCategory ?? '').where((c) => c.isNotEmpty).toSet().toList();
   }
 
   @override
@@ -253,19 +276,18 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                     ?.copyWith(fontWeight: FontWeight.bold)),
           ),
           const SizedBox(height: 24),
-          Text('Category',
+          Text('Sub-Category',
               style: theme.textTheme.titleMedium
                   ?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8.0,
             runSpacing: 8.0,
-            children: _uniqueCategories.map((category) {
+            children: _uniqueSubCategories.map((category) {
               return ChoiceChip(
                 label: Text(category),
                 selected: _selectedCategory == category,
-                // Use theme colors for selected state
-                selectedColor: theme.colorScheme.primary.withValues(alpha: 0.8),
+                selectedColor: theme.colorScheme.primary.withAlpha(204),
                 labelStyle: TextStyle(
                   color: _selectedCategory == category
                       ? Colors.white
@@ -317,7 +339,6 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
           min: 0,
           max: max,
           divisions: max.toInt(),
-          // Use theme's primary color for the slider
           activeColor: theme.colorScheme.primary,
           label: value.toInt().toString(),
         ),

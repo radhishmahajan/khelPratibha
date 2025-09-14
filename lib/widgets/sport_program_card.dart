@@ -25,7 +25,6 @@ class SportProgramCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- IMAGE SECTION with Gradient ---
             Stack(
               children: [
                 Image.network(
@@ -39,12 +38,11 @@ class SportProgramCard extends StatelessWidget {
                     child: const Center(child: Icon(Icons.sports, size: 40)),
                   ),
                 ),
-                // Add a gradient overlay for better text readability
                 Positioned.fill(
                   child: Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [Colors.black.withValues(alpha: 0.6), Colors.transparent],
+                        colors: [Colors.black.withAlpha(153), Colors.transparent],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -55,8 +53,8 @@ class SportProgramCard extends StatelessWidget {
                   top: 12,
                   left: 12,
                   child: Chip(
-                    label: Text(program.category),
-                    backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.9),
+                    label: Text(program.subCategory),
+                    backgroundColor: theme.colorScheme.primary.withAlpha(230),
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     labelStyle: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
                     side: BorderSide.none,
@@ -64,8 +62,6 @@ class SportProgramCard extends StatelessWidget {
                 ),
               ],
             ),
-
-            // --- CONTENT SECTION (Flexible Layout) ---
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
@@ -79,8 +75,6 @@ class SportProgramCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 6),
-                    // Using Flexible allows the description to take available space
-                    // without causing an overflow, which is more robust than Expanded.
                     Flexible(
                       child: Text(
                         program.description,
@@ -89,7 +83,7 @@ class SportProgramCard extends StatelessWidget {
                         maxLines: 3,
                       ),
                     ),
-                    const Spacer(), // Pushes the stats to the bottom
+                    const Spacer(),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -101,8 +95,6 @@ class SportProgramCard extends StatelessWidget {
                 ),
               ),
             ),
-
-            // --- BUTTON SECTION ---
             Padding(
               padding: const EdgeInsets.all(12.0),
               child: SizedBox(
@@ -112,7 +104,7 @@ class SportProgramCard extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
-                  child: Text(isJoined ? 'Join Program' : 'View Program'),
+                  child: Text(isJoined ? 'View Program' : 'Join Program'),
                 ),
               ),
             ),
@@ -122,7 +114,6 @@ class SportProgramCard extends StatelessWidget {
     );
   }
 
-  // Helper widget for consistent stat display
   Widget _buildStat(BuildContext context, IconData icon, String text) {
     final theme = Theme.of(context);
     return Row(
@@ -134,4 +125,3 @@ class SportProgramCard extends StatelessWidget {
     );
   }
 }
-

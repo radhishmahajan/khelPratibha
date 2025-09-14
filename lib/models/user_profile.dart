@@ -9,7 +9,10 @@ class UserProfile {
   final String? avatarUrl;
   final DateTime? dateOfBirth;
   final String? sport;
-  final SportCategory? selectedCategory; // <-- ADDED THIS FIELD
+  final SportCategory? selectedCategory;
+  final double? heightCm;
+  final double? weightKg;
+  final Map<String, dynamic>? personalBests;
 
   UserProfile({
     required this.id,
@@ -19,7 +22,10 @@ class UserProfile {
     this.avatarUrl,
     this.dateOfBirth,
     this.sport,
-    this.selectedCategory, // <-- ADDED TO CONSTRUCTOR
+    this.selectedCategory,
+    this.heightCm,
+    this.weightKg,
+    this.personalBests,
   });
 
   factory UserProfile.fromMap(Map<String, dynamic> map) {
@@ -33,8 +39,12 @@ class UserProfile {
           ? DateTime.tryParse(map['date_of_birth'])
           : null,
       sport: map['sport'],
-      // Read the new field from the map
       selectedCategory: sportCategoryFromString(map['selected_category']),
+      heightCm: (map['height_cm'] as num?)?.toDouble(),
+      weightKg: (map['weight_kg'] as num?)?.toDouble(),
+      personalBests: map['personal_bests'] != null
+          ? Map<String, dynamic>.from(map['personal_bests'])
+          : null,
     );
   }
 
@@ -47,9 +57,11 @@ class UserProfile {
       'avatar_url': avatarUrl,
       'date_of_birth': dateOfBirth?.toIso8601String(),
       'sport': sport,
-      // Write the new field to the map
       'selected_category': selectedCategory?.name,
       'updated_at': DateTime.now().toIso8601String(),
+      'height_cm': heightCm,
+      'weight_kg': weightKg,
+      'personal_bests': personalBests,
     };
   }
 
@@ -61,7 +73,10 @@ class UserProfile {
     String? avatarUrl,
     DateTime? dateOfBirth,
     String? sport,
-    SportCategory? selectedCategory, // <-- ADDED TO COPYWITH
+    SportCategory? selectedCategory,
+    double? heightCm,
+    double? weightKg,
+    Map<String, dynamic>? personalBests,
   }) {
     return UserProfile(
       id: id ?? this.id,
@@ -72,6 +87,9 @@ class UserProfile {
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       sport: sport ?? this.sport,
       selectedCategory: selectedCategory ?? this.selectedCategory,
+      heightCm: heightCm ?? this.heightCm,
+      weightKg: weightKg ?? this.weightKg,
+      personalBests: personalBests ?? this.personalBests,
     );
   }
 }

@@ -1,76 +1,98 @@
 import 'package:flutter/material.dart';
-import 'package:khelpratibha/data/mock_performance_data.dart';
 import 'package:khelpratibha/models/performance_session.dart';
+import 'package:khelpratibha/providers/achievement_provider.dart';
+import 'package:khelpratibha/providers/session_provider.dart';
+import 'package:provider/provider.dart';
 
 class OverviewTab extends StatelessWidget {
   const OverviewTab({super.key});
 
+  String _calculateLevel(int sessionCount, double averageScore) {
+    if (sessionCount >= 10 && averageScore >= 80) {
+      return 'Advanced';
+    } else if (sessionCount >= 5 && averageScore >= 50) {
+      return 'Intermediate';
+    } else {
+      return 'Beginner';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    return SafeArea(
+      child: Consumer<SessionProvider>(
+        builder: (context, sessionProvider, child) {
+          if (sessionProvider.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-    final sessions = mockPerformanceSessions;
-    double averageScoreValue = 0.0;
-    if (sessions.isNotEmpty) {
-      final double sumOfScores = sessions.map((s) => s.score).reduce((a, b) => a + b);
-      averageScoreValue = (sumOfScores / sessions.length) / 100.0;
-    }
-    final int averageScorePercentage = (averageScoreValue * 100).toInt();
+          final allSessions = sessionProvider.sessions;
+          final sessionsThisWeek = allSessions
+              .where((s) => s.createdAt.isAfter(DateTime.now().subtract(const Duration(days: 7))))
+              .toList();
 
-    return ListView(
-      padding: const EdgeInsets.all(16.0),
-      children: [
-        GridView(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 2.2,
-          ),
-          children:  [
-            KpiCard(title: 'Current Level', value: 'Intermediate', icon: Icons.track_changes, iconColor: Colors.blueAccent),
-            KpiCard(title: 'Overall Progress', value: '68%', icon: Icons.trending_up, iconColor: Colors.greenAccent),
-            KpiCard(title: 'Sessions This Week', value: sessions.length.toString(), icon: Icons.timer_outlined, iconColor: Colors.orangeAccent),
-            KpiCard(title: 'Achievements', value: '3', icon: Icons.emoji_events, iconColor: Colors.amber),
-          ],
-        ),
-        const SizedBox(height: 24),
-        const RecentPerformanceCard(sessions: mockPerformanceSessions),
-        const SizedBox(height: 16),
-        TrainingSummaryCard(totalSessions: sessions.length, averageScore: averageScorePercentage),
-        const SizedBox(height: 16),
-        // Card(
-        //   child: Padding(
-        //     padding: const EdgeInsets.all(16.0),
-        //     child: Column(
-        //       crossAxisAlignment: CrossAxisAlignment.start,
-        //       children: [
-        //         Text('Weekly Score Average', style: theme.textTheme.titleMedium),
-        //         const SizedBox(height: 16),
-        //         LinearProgressIndicator(
-        //           // Use the dynamically calculated value
-        //           value: weeklyProgressValue,
-        //           minHeight: 12,
-        //           borderRadius: BorderRadius.circular(6),
-        //           backgroundColor: Colors.grey.shade700,
-        //           color: theme.colorScheme.primary,
-        //         ),
-        //         const SizedBox(height: 8),
-        //         Align(
-        //           alignment: Alignment.centerRight,
-        //           // Display the dynamic percentage
-        //           child: Text('$weeklyProgressPercentage% average score'),
-        //         )
-        //       ],
-        //     ),
-        //   ),
-        // )
-      ],
+          final overallScore = allSessions.isNotEmpty
+              ? (allSessions.map((s) => s.score).reduce((a, b) => a + b) / allSessions.length)
+              : 0.0;
+
+          final currentLevel = _calculateLevel(allSessions.length, overallScore);
+
+          return ListView(
+            padding: const EdgeInsets.all(16.0),
+            children: [
+              GridView(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 2.2,
+                ),
+                children: [
+                  KpiCard(
+                      title: 'Current Level',
+                      value: currentLevel,
+                      icon: Icons.track_changes,
+                      iconColor: Colors.blueAccent),
+                  KpiCard(
+                      title: 'Overall Score',
+                      value: '${overallScore.toStringAsFixed(1)}/100',
+                      icon: Icons.star,
+                      iconColor: Colors.amber),
+                  KpiCard(
+                      title: 'Sessions This Week',
+                      value: sessionsThisWeek.length.toString(),
+                      icon: Icons.timer_outlined,
+                      iconColor: Colors.orangeAccent),
+                  Consumer<AchievementProvider>(
+                    builder: (context, achievementProvider, child) {
+                      final unlockedCount = achievementProvider.achievements
+                          .where((a) => a.isUnlocked)
+                          .length;
+                      return KpiCard(
+                          title: 'Achievements',
+                          value: unlockedCount.toString(),
+                          icon: Icons.emoji_events,
+                          iconColor: Colors.amber);
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              RecentPerformanceCard(sessions: allSessions),
+              const SizedBox(height: 16),
+              TrainingSummaryCard(
+                  totalSessions: allSessions.length,
+                  averageScore: overallScore.toInt()),
+            ],
+          );
+        },
+      ),
     );
   }
 }
+
 
 class KpiCard extends StatelessWidget {
   final String title;
@@ -135,24 +157,30 @@ class RecentPerformanceCard extends StatelessWidget {
                 ),
               )
             else
-            ...sessions.map((session) => Padding(
-              padding: const EdgeInsets.only(bottom: 12.0),
-              child: Row(
-                children: [
-                  Text(session.sessionName, style: Theme.of(context).textTheme.bodySmall),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: LinearProgressIndicator(
-                      value: session.score / 100,
-                      minHeight: 8,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
+              ...sessions.take(10).toList().asMap().entries.map((entry) {
+                int index = entry.key;
+                PerformanceSession session = entry.value;
+                int sessionNumber = sessions.length - index;
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12.0),
+                  child: Row(
+                    children: [
+                      Text("Session $sessionNumber", style: Theme.of(context).textTheme.bodySmall),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: LinearProgressIndicator(
+                          value: session.score / 100,
+                          minHeight: 8,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text('${session.score.toInt()}%', style: Theme.of(context).textTheme.bodySmall),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  Text('${session.score.toInt()}%', style: Theme.of(context).textTheme.bodySmall),
-                ],
-              ),
-            )),
+                );
+              }),
           ],
         ),
       ),
@@ -198,7 +226,7 @@ class SummaryBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        color: Theme.of(context).colorScheme.surfaceVariant.withAlpha(128),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -211,4 +239,3 @@ class SummaryBox extends StatelessWidget {
     );
   }
 }
-

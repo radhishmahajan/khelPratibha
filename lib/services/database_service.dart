@@ -1,12 +1,18 @@
+import 'package:khelpratibha/models/achievement.dart';
 import 'package:khelpratibha/models/assessment.dart';
+import 'package:khelpratibha/models/performance_session.dart';
+import 'package:khelpratibha/models/sport_category.dart';
+import 'package:khelpratibha/models/sport_event.dart';
 import 'package:khelpratibha/models/sport_program.dart';
 import 'package:khelpratibha/models/user_profile.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:khelpratibha/models/goal.dart';
+import 'package:khelpratibha/models/recommendation.dart';
 
 class DatabaseService {
   final supabase = Supabase.instance.client;
 
-  /// 🔹 Fetch user profile by userId
+  /// 隼 Fetch user profile by userId
   Future<UserProfile?> fetchUserProfile(String userId) async {
     final response = await supabase
         .from('profiles')
@@ -19,7 +25,7 @@ class DatabaseService {
     return UserProfile.fromMap(response);
   }
 
-  /// 🔹 Insert or update user profile
+  /// 隼 Insert or update user profile
   Future<UserProfile> upsertUserProfile(UserProfile profile) async {
     final response = await supabase
         .from('profiles')
@@ -30,22 +36,34 @@ class DatabaseService {
     return UserProfile.fromMap(response);
   }
 
-  /// 🔹 Delete user profile (optional)
+  /// 隼 Delete user profile (optional)
   Future<void> deleteUserProfile(String userId) async {
     await supabase.from('profiles').delete().eq('id', userId);
   }
 
-  /// 🔹 Creates a new assessment record in the 'assessments' table.
+  /// 隼 Creates a new assessment record in the 'assessments' table.
   Future<void> createAssessment(Assessment assessment) async {
     await supabase.from('assessments').insert(assessment.toMap());
   }
 
-  Future<List<SportProgram>> fetchPrograms() async {
-    final response = await supabase.from('programs').select();
-    return response.map((item) => SportProgram.fromMap(item)).toList();
+  Future<List<SportProgram>> fetchPrograms({SportCategory? category}) async {
+    // Call the new Supabase function
+    var query = supabase.rpc('get_programs_with_athlete_counts');
+
+    if (category != null) {
+      // Filter the results from the function by category
+      query = query.eq('category', category.name);
+    }
+
+    final response = await query;
+
+    // The RPC response is a list of maps, so we can parse it directly
+    return (response as List)
+        .map((item) => SportProgram.fromMap(item))
+        .toList();
   }
 
-  /// 🔹 Fetches a list of program titles the user has joined.
+  /// 隼 Fetches a list of program titles the user has joined.
   Future<List<String>> fetchJoinedProgramIds(String userId) async {
     final response = await supabase
         .from('joined_programs')
@@ -54,12 +72,82 @@ class DatabaseService {
     return response.map((item) => item['program_id'] as String).toList();
   }
 
-  /// 🔹 Adds a record to link a user to a program.
+  /// 隼 Adds a record to link a user to a program.
   Future<void> joinProgram({required String userId, required String programId}) async {
     await supabase.from('joined_programs').insert({
       'user_id': userId,
       'program_id': programId,
     });
   }
-}
 
+  Future<void> leaveProgram({required String userId, required String programId}) async {
+    await supabase
+        .from('joined_programs')
+        .delete()
+        .match({'user_id': userId, 'program_id': programId});
+  }
+
+  /// Fetches all events for a specific program ID.
+  Future<List<SportEvent>> fetchEventsForProgram(String programId) async {
+    final response = await supabase
+        .from('events')
+        .select()
+        .eq('program_id', programId);
+
+    return response.map((item) => SportEvent.fromMap(item)).toList();
+  }
+
+  Future<void> createSession(Map<String, dynamic> sessionData) async {
+    await supabase.from('sessions').insert(sessionData);
+  }
+
+  /// Fetches all sessions for a user within a specific program.
+  Future<List<PerformanceSession>> fetchSessions(String programId) async {
+    final userId = supabase.auth.currentUser!.id;
+    final response = await supabase
+        .from('sessions')
+        .select()
+        .eq('user_id', userId)
+        .eq('program_id', programId)
+        .order('created_at', ascending: false);
+
+    return response.map((item) => PerformanceSession.fromMap(item)).toList();
+  }
+
+  Future<List<Achievement>> fetchAchievements() async {
+    final userId = supabase.auth.currentUser!.id;
+    final response = await supabase.rpc('get_user_achievements', params: {'p_user_id': userId});
+
+    return (response as List).map((item) => Achievement.fromMap(item)).toList();
+  }
+
+  /// Unlocks a specific achievement for a user.
+  Future<void> unlockAchievement(String achievementId) async {
+    final userId = supabase.auth.currentUser!.id;
+    await supabase.from('user_achievements').insert({
+      'user_id': userId,
+      'achievement_id': achievementId,
+    });
+  }
+
+  Future<List<Goal>> fetchGoals() async {
+    final userId = supabase.auth.currentUser!.id;
+    final response = await supabase
+        .from('goals')
+        .select()
+        .eq('user_id', userId)
+        .order('created_at', ascending: false);
+    return response.map((item) => Goal.fromMap(item)).toList();
+  }
+
+  Future<List<Recommendation>> fetchRecommendations() async {
+    final userId = supabase.auth.currentUser!.id;
+    final response = await supabase
+        .from('recommendations')
+        .select()
+        .eq('user_id', userId)
+        .order('created_at', ascending: false);
+    return response.map((item) => Recommendation.fromMap(item)).toList();
+  }
+
+}

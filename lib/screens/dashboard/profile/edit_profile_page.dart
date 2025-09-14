@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:khelpratibha/models/sport_category.dart';
 import 'package:khelpratibha/models/user_role.dart';
 import 'package:khelpratibha/providers/user_provider.dart';
+import 'package:khelpratibha/screens/core/auth_gate.dart';
 import 'package:khelpratibha/services/database_service.dart';
 import 'package:khelpratibha/services/storage_service.dart';
 import 'package:khelpratibha/widgets/custom_input_field.dart';
@@ -20,9 +21,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _fullNameController;
   late TextEditingController _sportController;
+  late TextEditingController _heightController;
+  late TextEditingController _weightController;
+  late DateTime? _dateOfBirth;
   DateTime? _selectedDate;
   XFile? _selectedImage;
-  SportCategory? _selectedCategory; // <-- State for the new dropdown
+  SportCategory? _selectedCategory;
   bool _isLoading = false;
 
   @override
@@ -31,14 +35,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final userProfile = context.read<UserProvider>().userProfile;
     _fullNameController = TextEditingController(text: userProfile?.fullName);
     _sportController = TextEditingController(text: userProfile?.sport);
-    _selectedDate = userProfile?.dateOfBirth;
+    _dateOfBirth = userProfile?.dateOfBirth;
     _selectedCategory = userProfile?.selectedCategory;
+    _heightController = TextEditingController(text: userProfile?.heightCm?.toString());
+    _weightController = TextEditingController(text: userProfile?.weightKg?.toString());
   }
 
   @override
   void dispose() {
     _fullNameController.dispose();
     _sportController.dispose();
+    _heightController.dispose();
+    _weightController.dispose();
     super.dispose();
   }
 
@@ -66,7 +74,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     setState(() => _isLoading = true);
     final userProvider = context.read<UserProvider>();
-    // CORRECTED: Services should be read from Provider for better testability
     final dbService = context.read<DatabaseService>();
     final storageService = context.read<StorageService>();
     final currentProfile = userProvider.userProfile!;
@@ -81,8 +88,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
         fullName: _fullNameController.text.trim(),
         avatarUrl: avatarUrl,
         sport: _sportController.text.trim(),
-        dateOfBirth: _selectedDate,
-        selectedCategory: _selectedCategory, // <-- Save the selected category
+        dateOfBirth: _dateOfBirth,
+        selectedCategory: _selectedCategory,
+        heightCm: double.tryParse(_heightController.text),
+        weightKg: double.tryParse(_weightController.text),
       );
 
       await dbService.upsertUserProfile(updatedProfile);
@@ -90,7 +99,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile updated successfully!')));
-        Navigator.of(context).pop();
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const AuthGate()),
+              (route) => false,
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -140,8 +152,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
               ),
             ),
             const SizedBox(height: 32),
-
-            // --- Personal Information Section ---
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -168,13 +178,25 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         child: Text(_selectedDate != null ? _selectedDate!.toLocal().toString().split(' ')[0] : 'Select your date of birth'),
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    CustomInputField(
+                      controller: _heightController,
+                      labelText: 'Height (cm)',
+                      prefixIcon: Icons.height,
+                      keyboardType: TextInputType.number,
+                    ),
+                    const SizedBox(height: 16),
+                    CustomInputField(
+                      controller: _weightController,
+                      labelText: 'Weight (kg)',
+                      prefixIcon: Icons.fitness_center,
+                      keyboardType: TextInputType.number,
+                    ),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 24),
-
-            // --- Sporting Information Section ---
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -189,7 +211,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       prefixIcon: Icons.sports_soccer_outlined,
                     ),
                     const SizedBox(height: 16),
-                    // Only show category selection for Players
                     if (userProfile?.role == UserRole.player)
                       DropdownButtonFormField<SportCategory>(
                         value: _selectedCategory,
