@@ -3,6 +3,7 @@ import 'package:khelpratibha/models/user_role.dart';
 import 'package:khelpratibha/providers/user_provider.dart';
 import 'package:khelpratibha/screens/auth/login_page.dart';
 import 'package:khelpratibha/screens/core/role_selection_page.dart';
+import 'package:khelpratibha/screens/core/selection_home_page.dart';
 import 'package:khelpratibha/services/auth_service.dart';
 import 'package:khelpratibha/utils/navigation_helper.dart';
 import 'package:provider/provider.dart';
@@ -13,11 +14,9 @@ class AuthGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Listen to the auth state stream from your AuthService.
     return StreamBuilder<AuthState>(
       stream: context.watch<AuthService>().authStateChanges,
       builder: (context, snapshot) {
-        // While waiting for the first auth event, show a loading screen.
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
@@ -25,8 +24,6 @@ class AuthGate extends StatelessWidget {
         final session = snapshot.data?.session;
 
         if (session != null) {
-          // If a user is logged in, use a FutureBuilder to load their profile.
-          // This ensures data fetching happens outside of the main build cycle.
           return FutureBuilder(
             future: _getProfile(context, session.user.id),
             builder: (context, profileSnapshot) {
@@ -34,25 +31,39 @@ class AuthGate extends StatelessWidget {
                 return const Scaffold(body: Center(child: CircularProgressIndicator()));
               }
 
-              // After fetching, watch the provider for the profile data.
               final userProfile = context.watch<UserProvider>().userProfile;
 
+              // --- NEW NAVIGATION LOGIC ---
               if (userProfile == null || userProfile.role == UserRole.unknown) {
+                // Case 1: New user or role not set -> Go to Role Selection
                 return const RoleSelectionPage();
-              } else {
-                return NavigationHelper.getDashboardFromRole(userProfile.role);
+              } else if (userProfile.role == UserRole.scout) {
+                // Case 2: User is a Scout -> Always go to Category Selection
+                return const SelectionHomePage();
+              } else if (userProfile.role == UserRole.player) {
+                // Case 3: User is a Player
+                if (userProfile.selectedCategory != null) {
+                  // If their category is already saved -> Go directly to their dashboard
+                  return NavigationHelper.getDashboardFromRole(
+                    userProfile.role,
+                    userProfile.selectedCategory!,
+                  );
+                } else {
+                  // If they haven't selected a category yet -> Go to Category Selection
+                  return const SelectionHomePage();
+                }
               }
+              // Fallback for any other case
+              return const LoginPage();
             },
           );
         } else {
-          // If no session, show the login page.
           return const LoginPage();
         }
       },
     );
   }
 
-  // This helper function ensures we only fetch the profile if it's not already in the provider.
   Future<void> _getProfile(BuildContext context, String userId) async {
     final userProvider = context.read<UserProvider>();
     if (userProvider.userProfile?.id != userId) {

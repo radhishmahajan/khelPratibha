@@ -1,23 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:khelpratibha/models/sport_category.dart';
 import 'package:khelpratibha/models/user_role.dart';
 import 'package:khelpratibha/screens/dashboard/player/player_dashboard.dart';
 import 'package:khelpratibha/screens/dashboard/scout/scout_dashboard.dart';
 
-// REMOVED import for coach_dashboard.dart
-
 class NavigationHelper {
-  static Widget getDashboardFromRole(UserRole role) {
+
+  // This function is for navigating from the category selection screen
+  static void navigateToDashboard(BuildContext context, UserRole role, SportCategory category) {
+    final dashboard = getDashboardFromRole(role, category);
+    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => dashboard));
+  }
+
+  // This function is for navigating directly from the AuthGate
+  static Widget getDashboardFromRole(UserRole role, SportCategory category) {
     switch (role) {
       case UserRole.player:
-        return const PlayerDashboard();
+        return PlayerDashboard(category: category);
       case UserRole.scout:
-        return const ScoutDashboard();
-    // REMOVED the case for UserRole.coach
+        return ScoutDashboard(category: category);
       default:
         return const Scaffold(
-          body: Center(
-            child: Text('Error: Unknown user role.'),
-          ),
+          body: Center(child: Text('Error: Unknown user role.')),
         );
     }
   }

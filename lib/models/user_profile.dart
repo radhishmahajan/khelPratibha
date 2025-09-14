@@ -1,3 +1,4 @@
+import 'package:khelpratibha/models/sport_category.dart';
 import 'package:khelpratibha/models/user_role.dart';
 
 class UserProfile {
@@ -8,6 +9,7 @@ class UserProfile {
   final String? avatarUrl;
   final DateTime? dateOfBirth;
   final String? sport;
+  final SportCategory? selectedCategory; // <-- ADDED THIS FIELD
 
   UserProfile({
     required this.id,
@@ -17,6 +19,7 @@ class UserProfile {
     this.avatarUrl,
     this.dateOfBirth,
     this.sport,
+    this.selectedCategory, // <-- ADDED TO CONSTRUCTOR
   });
 
   factory UserProfile.fromMap(Map<String, dynamic> map) {
@@ -30,6 +33,8 @@ class UserProfile {
           ? DateTime.tryParse(map['date_of_birth'])
           : null,
       sport: map['sport'],
+      // Read the new field from the map
+      selectedCategory: sportCategoryFromString(map['selected_category']),
     );
   }
 
@@ -42,11 +47,12 @@ class UserProfile {
       'avatar_url': avatarUrl,
       'date_of_birth': dateOfBirth?.toIso8601String(),
       'sport': sport,
+      // Write the new field to the map
+      'selected_category': selectedCategory?.name,
       'updated_at': DateTime.now().toIso8601String(),
     };
   }
 
-  // CORRECTED: Added copyWith method for easier profile updates
   UserProfile copyWith({
     String? id,
     String? email,
@@ -55,6 +61,7 @@ class UserProfile {
     String? avatarUrl,
     DateTime? dateOfBirth,
     String? sport,
+    SportCategory? selectedCategory, // <-- ADDED TO COPYWITH
   }) {
     return UserProfile(
       id: id ?? this.id,
@@ -64,7 +71,7 @@ class UserProfile {
       avatarUrl: avatarUrl ?? this.avatarUrl,
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       sport: sport ?? this.sport,
+      selectedCategory: selectedCategory ?? this.selectedCategory,
     );
   }
 }
-
