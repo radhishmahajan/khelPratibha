@@ -80,7 +80,9 @@ class _PerformanceDashboardPageState extends State<PerformanceDashboardPage> {
                     await context
                         .read<UserProvider>()
                         .leaveProgram(programId: widget.program.id);
-                    Navigator.of(context).pop();
+                    if(context.mounted) {
+                      Navigator.of(context).pop();
+                    }
                   }
                 }
               },

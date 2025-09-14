@@ -247,7 +247,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     _athleteCount = widget.initialAthleteCount;
     _eventCount = widget.initialEventCount;
     _uniqueSubCategories =
-        widget.allPrograms.map((p) => p.subCategory ?? '').where((c) => c.isNotEmpty).toSet().toList();
+        widget.allPrograms.map((p) => p.subCategory).where((c) => c.isNotEmpty).toSet().toList();
   }
 
   @override
