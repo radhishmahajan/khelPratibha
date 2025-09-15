@@ -150,4 +150,29 @@ class DatabaseService {
     return response.map((item) => Recommendation.fromMap(item)).toList();
   }
 
+  Future<Map<String, dynamic>> fetchCategoryStats() async {
+    final response = await supabase.rpc('get_category_stats');
+    final stats = {
+      'olympics': {'programs': 0, 'athletes': 0, 'tags': <String>[]},
+      'paralympics': {'programs': 0, 'athletes': 0, 'tags': <String>[]},
+    };
+
+    for (var row in response) {
+      final category = row['category_name'];
+      if (stats.containsKey(category)) {
+        stats[category]!['programs'] = row['program_count'] ?? 0;
+        stats[category]!['athletes'] = row['athlete_count'] ?? 0;
+      }
+    }
+
+    // Fetch sport tags for each category
+    final olympicsTagsResponse = await supabase.rpc('get_sports_for_category', params: {'p_category': 'olympics', 'p_limit': 5});
+    stats['olympics']!['tags'] = (olympicsTagsResponse as List).map<String>((item) => item['title'] as String).toList();
+
+    final paralympicsTagsResponse = await supabase.rpc('get_sports_for_category', params: {'p_category': 'paralympics', 'p_limit': 5});
+    stats['paralympics']!['tags'] = (paralympicsTagsResponse as List).map<String>((item) => item['title'] as String).toList();
+
+    return stats;
+  }
+
 }

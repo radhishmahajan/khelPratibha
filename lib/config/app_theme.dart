@@ -26,7 +26,7 @@ class AppTheme {
       titleTextStyle: GoogleFonts.poppins(
         fontSize: 20,
         fontWeight: FontWeight.bold,
-        color: Colors.white,
+        color: Colors.black,
       ),
     ),
     textTheme: _buildTextTheme(const Color(0xFF333333)),
