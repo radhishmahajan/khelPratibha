@@ -204,7 +204,7 @@ class _GenericDashboardScaffoldState extends State<GenericDashboardScaffold> wit
                           Container(
                             height: 150,
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.4),
+                              color: Colors.black.withValues(alpha: 0.4),
                             ),
                           ),
                           Text(
@@ -255,7 +255,7 @@ class _GenericDashboardScaffoldState extends State<GenericDashboardScaffold> wit
                                 crossAxisCount: 2,
                                 crossAxisSpacing: 16,
                                 mainAxisSpacing: 16,
-                                childAspectRatio: 0.65,
+                                childAspectRatio: 0.52,
                               ),
                               itemCount: _filteredPrograms.length,
                               shrinkWrap: true,
@@ -328,7 +328,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     _athleteCount = widget.initialAthleteCount;
     _eventCount = widget.initialEventCount;
     _uniqueSubCategories =
-        widget.allPrograms.map((p) => p.subCategory ?? '').where((c) => c.isNotEmpty).toSet().toList();
+        widget.allPrograms.map((p) => p.subCategory).where((c) => c.isNotEmpty).toSet().toList();
   }
 
   @override
@@ -341,7 +341,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           decoration: BoxDecoration(
-            color: isLight ? Colors.white.withOpacity(0.8) : Colors.black.withOpacity(0.5),
+            color: isLight ? Colors.white.withValues(alpha: 0.8) : Colors.black.withValues(alpha: 0.5),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: Padding(

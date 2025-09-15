@@ -1,5 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:khelpratibha/models/achievement.dart';
 import 'package:khelpratibha/models/assessment.dart';
+import 'package:khelpratibha/models/leaderboard_entry.dart';
 import 'package:khelpratibha/models/performance_session.dart';
 import 'package:khelpratibha/models/sport_category.dart';
 import 'package:khelpratibha/models/sport_event.dart';
@@ -173,6 +175,24 @@ class DatabaseService {
     stats['paralympics']!['tags'] = (paralympicsTagsResponse as List).map<String>((item) => item['title'] as String).toList();
 
     return stats;
+  }
+
+  Future<List<LeaderboardEntry>> fetchLeaderboard(String programId) async {
+    try {
+      final response = await supabase.rpc(
+        'get_leaderboard_for_program',
+        params: {'p_program_id': programId},
+      );
+
+      return (response as List)
+          .asMap()
+          .entries
+          .map((entry) => LeaderboardEntry.fromMap(entry.value, entry.key + 1))
+          .toList();
+    } catch (e) {
+      debugPrint('Error fetching leaderboard: $e');
+      rethrow;
+    }
   }
 
 }

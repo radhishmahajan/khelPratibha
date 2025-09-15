@@ -5,6 +5,7 @@ import 'package:khelpratibha/models/sport_program.dart';
 import 'package:khelpratibha/providers/achievement_provider.dart';
 import 'package:khelpratibha/providers/session_provider.dart';
 import 'package:khelpratibha/providers/user_provider.dart';
+import 'package:khelpratibha/screens/performance_dashboard/tabs/leaderboard_tab.dart';
 import 'tabs/achievements_tab.dart';
 import 'tabs/goals_tab.dart';
 import 'tabs/media_analysis_tab.dart';
@@ -66,7 +67,7 @@ class _PerformanceDashboardPageState extends State<PerformanceDashboardPage> wit
     final isLight = themeNotifier.themeMode == ThemeMode.light;
 
     return DefaultTabController(
-      length: 6,
+      length: 7,
       child: Scaffold(
         extendBodyBehindAppBar: true,
         appBar: AppBar(
@@ -136,6 +137,7 @@ class _PerformanceDashboardPageState extends State<PerformanceDashboardPage> wit
                       Tab(icon: Tooltip(message: 'Overview', child: Icon(Icons.dashboard_outlined))),
                       Tab(icon: Tooltip(message: 'Progress', child: Icon(Icons.show_chart_outlined))),
                       Tab(icon: Tooltip(message: 'Media Analysis', child: Icon(Icons.video_camera_back_outlined))),
+                      Tab(icon: Tooltip(message: 'Leaderboard', child: Icon(Icons.leaderboard_outlined))),
                       Tab(icon: Tooltip(message: 'Goals', child: Icon(Icons.flag_outlined))),
                       Tab(icon: Tooltip(message: 'Achievements', child: Icon(Icons.emoji_events_outlined))),
                       Tab(icon: Tooltip(message: 'Recommendations', child: Icon(Icons.lightbulb_outline))),
@@ -173,6 +175,7 @@ class _PerformanceDashboardPageState extends State<PerformanceDashboardPage> wit
                     const OverviewTab(),
                     const ProgressTab(),
                     MediaAnalysisTab(program: widget.program),
+                    LeaderboardTab(program: widget.program),
                     const GoalsTab(),
                     const AchievementsTab(),
                     const RecommendationsTab(),

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:khelpratibha/models/sport_program.dart';
@@ -40,7 +41,8 @@ class _MediaAnalysisTabState extends State<MediaAnalysisTab> {
   }
 
   Future<void> _pickVideo() async {
-    final pickedFile = await ImagePicker().pickVideo(source: ImageSource.gallery);
+    final pickedFile =
+    await ImagePicker().pickVideo(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
         _videoFile = pickedFile;
@@ -95,11 +97,13 @@ class _MediaAnalysisTabState extends State<MediaAnalysisTab> {
 
         final sessions = sessionProvider.sessions;
         final overallScore = sessions.isNotEmpty
-            ? (sessions.map((s) => s.score).reduce((a, b) => a + b) / sessions.length)
+            ? (sessions.map((s) => s.score).reduce((a, b) => a + b) /
+            sessions.length)
             : 0.0;
         final currentLevel = _calculateLevel(sessions.length, overallScore);
 
-        await achievementProvider.checkAndUnlockAchievements(sessions, currentLevel);
+        await achievementProvider.checkAndUnlockAchievements(
+            sessions, currentLevel);
       }
     } catch (e) {
       setState(() {
@@ -117,6 +121,7 @@ class _MediaAnalysisTabState extends State<MediaAnalysisTab> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isLight = theme.brightness == Brightness.light;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
@@ -125,7 +130,8 @@ class _MediaAnalysisTabState extends State<MediaAnalysisTab> {
         children: [
           Text(
             'Media Analysis',
-            style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+            style:
+            theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
@@ -135,23 +141,33 @@ class _MediaAnalysisTabState extends State<MediaAnalysisTab> {
           const SizedBox(height: 32),
           AspectRatio(
             aspectRatio: 16 / 9,
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade700),
-                borderRadius: BorderRadius.circular(12),
-                color: Colors.black,
-              ),
-              child: _videoPlayerController != null &&
-                  _videoPlayerController!.value.isInitialized
-                  ? ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: AspectRatio(
-                  aspectRatio: _videoPlayerController!.value.aspectRatio,
-                  child: VideoPlayer(_videoPlayerController!),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade700),
+                    borderRadius: BorderRadius.circular(24),
+                    color: isLight
+                        ? Colors.white.withValues(alpha: 0.5)
+                        : Colors.black.withValues(alpha: 0.3),
+                  ),
+                  child: _videoPlayerController != null &&
+                      _videoPlayerController!.value.isInitialized
+                      ? ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: AspectRatio(
+                      aspectRatio:
+                      _videoPlayerController!.value.aspectRatio,
+                      child: VideoPlayer(_videoPlayerController!),
+                    ),
+                  )
+                      : const Center(
+                    child: Icon(Icons.videocam,
+                        size: 60, color: Colors.grey),
+                  ),
                 ),
-              )
-                  : const Center(
-                child: Icon(Icons.videocam, size: 60, color: Colors.grey),
               ),
             ),
           ),
@@ -159,18 +175,19 @@ class _MediaAnalysisTabState extends State<MediaAnalysisTab> {
           Row(
             children: [
               Expanded(
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.video_library),
-                  label: const Text('Select Video'),
+                child: _buildGradientButton(
+                  text: 'Select Video',
                   onPressed: _pickVideo,
+                  icon: Icons.video_library,
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.analytics),
-                  label: const Text('Analyze'),
-                  onPressed: _videoFile != null && !_isAnalyzing ? _analyzeVideo : null,
+                child: _buildGradientButton(
+                  text: 'Analyze',
+                  onPressed:
+                  _videoFile != null && !_isAnalyzing ? _analyzeVideo : null,
+                  icon: Icons.analytics,
                 ),
               ),
             ],
@@ -197,27 +214,89 @@ class _MediaAnalysisTabState extends State<MediaAnalysisTab> {
           if (_analysisResult != null)
             Padding(
               padding: const EdgeInsets.only(top: 24.0),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Analysis Result', style: theme.textTheme.titleMedium),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Feedback: ${_analysisResult!['analysis_results']['feedback']}',
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    padding: const EdgeInsets.all(16.0),
+                    decoration: BoxDecoration(
+                      color: isLight
+                          ? Colors.white.withValues(alpha: 0.5)
+                          : Colors.black.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: isLight
+                            ? Colors.white.withValues(alpha: 0.7)
+                            : Colors.grey.shade800,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Talent Score: ${_analysisResult!['analysis_results']['talent_score']}',
-                      ),
-                    ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Analysis Result',
+                            style: theme.textTheme.titleMedium),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Feedback: ${_analysisResult!['analysis_results']['feedback']}',
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Talent Score: ${_analysisResult!['analysis_results']['talent_score']}',
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildGradientButton({
+    required String text,
+    required VoidCallback? onPressed,
+    required IconData icon,
+  }) {
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFEA3B81), Color(0xFF6B47EE)],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        alignment: Alignment.center,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: Colors.white),
+            const SizedBox(width: 8),
+            Text(
+              text,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

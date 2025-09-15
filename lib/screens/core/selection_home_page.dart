@@ -192,7 +192,7 @@ class SportCategoryCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withValues(alpha: 0.2),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               )
@@ -204,10 +204,10 @@ class SportCategoryCard extends StatelessWidget {
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(
               decoration: BoxDecoration(
-                color: isLight ? Colors.white.withOpacity(0.5) : Colors.black.withOpacity(0.3),
+                color: isLight ? Colors.white.withValues(alpha: 0.5) : Colors.black.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: isLight ? Colors.white.withOpacity(0.7) : Colors.grey.shade800,
+                  color: isLight ? Colors.white.withValues(alpha: 0.7) : Colors.grey.shade800,
                 ),
               ),
               child: Column(
@@ -256,7 +256,7 @@ class SportCategoryCard extends StatelessWidget {
                           runSpacing: 4,
                           children: tags.map((tag) => Chip(
                             label: Text(tag),
-                            backgroundColor: theme.colorScheme.secondary.withOpacity(0.1),
+                            backgroundColor: theme.colorScheme.secondary.withValues(alpha: 0.1),
                             side: BorderSide.none,
                           )).toList(),
                         ),
@@ -303,7 +303,7 @@ class SportCategoryCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.4),
+            color: Colors.black.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(

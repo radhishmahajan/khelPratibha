@@ -102,7 +102,8 @@ class PerformanceChart extends StatefulWidget {
 }
 
 class _PerformanceChartState extends State<PerformanceChart> with SingleTickerProviderStateMixin {
-  late AnimationController _chartAnimationController;
+  late final AnimationController _chartAnimationController;
+  late final Animation<double> _chartAnimation;
 
   @override
   void initState() {
@@ -111,6 +112,12 @@ class _PerformanceChartState extends State<PerformanceChart> with SingleTickerPr
       vsync: this,
       duration: const Duration(milliseconds: 1000),
     );
+
+    _chartAnimation = CurvedAnimation(
+      parent: _chartAnimationController,
+      curve: Curves.easeInOutCubic,
+    );
+
     _chartAnimationController.forward();
   }
 
@@ -124,6 +131,7 @@ class _PerformanceChartState extends State<PerformanceChart> with SingleTickerPr
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isLight = theme.brightness == Brightness.light;
+
     final allSpots = widget.sessions.reversed
         .toList()
         .asMap()
@@ -139,10 +147,10 @@ class _PerformanceChartState extends State<PerformanceChart> with SingleTickerPr
           height: 250,
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
           decoration: BoxDecoration(
-            color: isLight ? Colors.white.withOpacity(0.5) : Colors.black.withOpacity(0.3),
+            color: isLight ? Colors.white.withValues(alpha: 0.5) : Colors.black.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: isLight ? Colors.white.withOpacity(0.7) : Colors.grey.shade800,
+              color: isLight ? Colors.white.withValues(alpha: 0.7) : Colors.grey.shade800,
             ),
           ),
           child: Column(
@@ -152,9 +160,12 @@ class _PerformanceChartState extends State<PerformanceChart> with SingleTickerPr
               const SizedBox(height: 24),
               Expanded(
                 child: AnimatedBuilder(
-                  animation: _chartAnimationController,
+                  animation: _chartAnimation,
                   builder: (context, child) {
-                    final spotsToShow = (allSpots.length * _chartAnimationController.value).ceil();
+                    final animatedSpots = allSpots.map((spot) {
+                      return FlSpot(spot.x, spot.y * _chartAnimation.value);
+                    }).toList();
+
                     return LineChart(
                       LineChartData(
                         gridData: FlGridData(show: false),
@@ -174,10 +185,11 @@ class _PerformanceChartState extends State<PerformanceChart> with SingleTickerPr
                               reservedSize: 30,
                               interval: 1,
                               getTitlesWidget: (value, meta) {
-                                if (value < widget.sessions.length) {
+                                if (value.toInt() < widget.sessions.length) {
+                                  final sessionNumber = widget.sessions.length - value.toInt();
                                   return Padding(
                                     padding: const EdgeInsets.only(top: 8.0),
-                                    child: Text('S${value.toInt() + 1}'),
+                                    child: Text('S$sessionNumber'),
                                   );
                                 }
                                 return const Text('');
@@ -192,7 +204,7 @@ class _PerformanceChartState extends State<PerformanceChart> with SingleTickerPr
                         maxY: 100,
                         lineBarsData: [
                           LineChartBarData(
-                            spots: allSpots.sublist(0, spotsToShow),
+                            spots: animatedSpots,
                             isCurved: true,
                             gradient: const LinearGradient(
                               colors: [Colors.cyan, Colors.blueAccent],
@@ -204,8 +216,8 @@ class _PerformanceChartState extends State<PerformanceChart> with SingleTickerPr
                               show: true,
                               gradient: LinearGradient(
                                 colors: [
-                                  Colors.cyan.withOpacity(0.3),
-                                  Colors.blueAccent.withOpacity(0.0),
+                                  Colors.cyan.withValues(alpha: 0.3),
+                                  Colors.blueAccent.withValues(alpha: 0.0),
                                 ],
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
@@ -245,10 +257,10 @@ class SessionHistoryCard extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 16.0),
           padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
-            color: isLight ? Colors.white.withOpacity(0.5) : Colors.black.withOpacity(0.3),
+            color: isLight ? Colors.white.withValues(alpha: 0.5) : Colors.black.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: isLight ? Colors.white.withOpacity(0.7) : Colors.grey.shade800,
+              color: isLight ? Colors.white.withValues(alpha: 0.7) : Colors.grey.shade800,
             ),
           ),
           child: Column(

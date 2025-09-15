@@ -84,7 +84,7 @@ class _SplashScreenState extends State<SplashScreen> {
               Text(
                 'Unlocking Sports Potential',
                 style: theme.textTheme.titleMedium?.copyWith(
-                  color: (isLight ? Colors.black : Colors.white).withOpacity(0.7),
+                  color: (isLight ? Colors.black : Colors.white).withValues(alpha: 0.7),
                   fontStyle: FontStyle.italic,
                 ),
                 textAlign: TextAlign.center,

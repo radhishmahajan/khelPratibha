@@ -231,7 +231,7 @@ class RoleCard extends StatelessWidget {
           gradient: gradient,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 10,
               offset: const Offset(0, 5),
             )
@@ -244,8 +244,8 @@ class RoleCard extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(24.0),
               color: isLight
-                  ? Colors.white.withOpacity(0.6)
-                  : Colors.black.withOpacity(0.4),
+                  ? Colors.white.withValues(alpha: 0.6)
+                  : Colors.black.withValues(alpha: 0.4),
               child: Column(
                 children: [
                   ShaderMask(
