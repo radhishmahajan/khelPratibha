@@ -12,6 +12,7 @@ import 'tabs/media_analysis_tab.dart';
 import 'tabs/overview_tab.dart';
 import 'tabs/progress_tab.dart';
 import 'tabs/recommendations_tab.dart';
+import 'tabs/news_tab.dart';
 import 'package:provider/provider.dart';
 
 class PerformanceDashboardPage extends StatefulWidget {
@@ -67,7 +68,7 @@ class _PerformanceDashboardPageState extends State<PerformanceDashboardPage> wit
     final isLight = themeNotifier.themeMode == ThemeMode.light;
 
     return DefaultTabController(
-      length: 7,
+      length: 8,
       child: Scaffold(
         extendBodyBehindAppBar: true,
         appBar: AppBar(
@@ -132,7 +133,7 @@ class _PerformanceDashboardPageState extends State<PerformanceDashboardPage> wit
                     ),
                   ),
                   child: const TabBar(
-                    isScrollable: false, // Set to false to remove scrollbar
+                    isScrollable: false,
                     tabs: [
                       Tab(icon: Tooltip(message: 'Overview', child: Icon(Icons.dashboard_outlined))),
                       Tab(icon: Tooltip(message: 'Progress', child: Icon(Icons.show_chart_outlined))),
@@ -141,6 +142,7 @@ class _PerformanceDashboardPageState extends State<PerformanceDashboardPage> wit
                       Tab(icon: Tooltip(message: 'Goals', child: Icon(Icons.flag_outlined))),
                       Tab(icon: Tooltip(message: 'Achievements', child: Icon(Icons.emoji_events_outlined))),
                       Tab(icon: Tooltip(message: 'Recommendations', child: Icon(Icons.lightbulb_outline))),
+                      Tab(icon: Tooltip(message: 'News', child: Icon(Icons.article_outlined))),
                     ],
                   ),
                 ),
@@ -179,6 +181,7 @@ class _PerformanceDashboardPageState extends State<PerformanceDashboardPage> wit
                     const GoalsTab(),
                     const AchievementsTab(),
                     const RecommendationsTab(),
+                    NewsTab(program: widget.program),
                   ],
                 ),
               ),

@@ -11,6 +11,7 @@ import 'package:khelpratibha/services/analysis_service.dart';
 import 'package:khelpratibha/services/auth_service.dart';
 import 'package:khelpratibha/services/database_service.dart';
 import 'package:khelpratibha/services/storage_service.dart';
+import 'package:khelpratibha/services/news_service.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
@@ -26,6 +27,7 @@ void main() async {
         Provider<DatabaseService>(create: (_) => DatabaseService()),
         Provider<StorageService>(create: (_) => StorageService()),
         Provider<AnalysisService>(create: (_) => AnalysisService()),
+        Provider<NewsService>(create: (_) => NewsService()),
 
         // UI State Notifier
         ChangeNotifierProvider(create: (_) => ThemeNotifier()),
@@ -54,7 +56,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // This Consumer *only* rebuilds the MaterialApp, leaving the providers above it untouched.
     return Consumer<ThemeNotifier>(
       builder: (context, themeNotifier, child) {
         return MaterialApp(

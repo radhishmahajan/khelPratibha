@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:khelpratibha/config/theme_notifier.dart';
 import 'package:khelpratibha/screens/auth/login_page.dart';
+import 'package:khelpratibha/screens/core/auth_gate.dart';
 import 'package:khelpratibha/services/auth_service.dart';
 import 'package:khelpratibha/widgets/custom_input_field.dart';
 import 'package:provider/provider.dart';
@@ -63,8 +64,16 @@ class _SignUpPageState extends State<SignUpPage> with SingleTickerProviderStateM
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
+
+      // CORRECTED NAVIGATION:
+      // Instead of popping back to the login page, we reset the navigation
+      // stack and go to the AuthGate. The AuthGate will then handle
+      // redirecting the now-logged-in user to the correct page.
       if (mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const AuthGate()),
+              (route) => false, // This removes all previous routes from the stack
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -84,6 +93,7 @@ class _SignUpPageState extends State<SignUpPage> with SingleTickerProviderStateM
 
   @override
   void dispose() {
+    _controller.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();

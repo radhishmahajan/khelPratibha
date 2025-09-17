@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:khelpratibha/models/user_profile.dart';
 import 'package:khelpratibha/models/user_role.dart';
 import 'package:khelpratibha/providers/user_provider.dart';
 import 'package:khelpratibha/screens/auth/login_page.dart';
@@ -10,68 +9,38 @@ import 'package:khelpratibha/utils/navigation_helper.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class AuthGate extends StatefulWidget {
+class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
   @override
-  State<AuthGate> createState() => _AuthGateState();
-}
-
-class _AuthGateState extends State<AuthGate> {
-  Future<UserProfile?>? _profileFuture;
-
-  Future<UserProfile?> _fetchInitialData(BuildContext context, String userId) async {
-    final userProvider = context.read<UserProvider>();
-    // This fetches all user data and stores it in the provider
-    await userProvider.fetchInitialData(userId);
-    // We return the profile to the FutureBuilder to reliably control navigation
-    return userProvider.userProfile;
-  }
-
-  @override
   Widget build(BuildContext context) {
+    // Watch the AuthService for login/logout events
     return StreamBuilder<AuthState>(
       stream: context.watch<AuthService>().authStateChanges,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
-        }
-
         final session = snapshot.data?.session;
 
         if (session != null) {
-          // This ensures the data is fetched only once per login session.
-          _profileFuture ??= _fetchInitialData(context, session.user.id);
-
-          return FutureBuilder<UserProfile?>(
-            future: _profileFuture,
-            builder: (context, profileSnapshot) {
-              if (profileSnapshot.connectionState == ConnectionState.waiting) {
-                return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          // If the user is logged in, watch the UserProvider for profile changes
+          return Consumer<UserProvider>(
+            builder: (context, userProvider, child) {
+              // Fetch initial data if the profile hasn't been loaded yet
+              if (userProvider.userProfile == null && !userProvider.isLoading) {
+                // Use a post-frame callback to avoid calling provider during build
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  userProvider.fetchInitialData(session.user.id);
+                });
               }
 
-              if (profileSnapshot.hasError || !profileSnapshot.hasData || profileSnapshot.data == null) {
-                return Scaffold(
-                  body: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text('Failed to load user profile.'),
-                        const SizedBox(height: 20),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() { _profileFuture = null; });
-                          },
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
+              // Show a loading screen while the profile is being fetched
+              if (userProvider.isLoading || userProvider.userProfile == null) {
+                return const Scaffold(
+                    body: Center(child: CircularProgressIndicator()));
               }
 
-              final userProfile = profileSnapshot.data!;
+              final userProfile = userProvider.userProfile!;
 
+              // Now, the navigation logic will react to any change in the user's role
               if (userProfile.role == UserRole.unknown) {
                 return const RoleSelectionPage();
               } else if (userProfile.role == UserRole.scout) {
@@ -86,13 +55,12 @@ class _AuthGateState extends State<AuthGate> {
                   return const SelectionHomePage();
                 }
               }
-
+              // Fallback to login page if something is wrong
               return const LoginPage();
             },
           );
         } else {
-          // When the user logs out, we clear the future so the next login can fetch new data.
-          _profileFuture = null;
+          // If there's no session, show the LoginPage
           return const LoginPage();
         }
       },
