@@ -9,12 +9,14 @@ import 'package:khelpratibha/providers/fitness_provider.dart';
 import 'package:khelpratibha/providers/goal_provider.dart';
 import 'package:khelpratibha/providers/leaderboard_provider.dart';
 import 'package:khelpratibha/providers/performance_provider.dart';
+import 'package:khelpratibha/providers/realtime_provider.dart';
 import 'package:khelpratibha/providers/user_provider.dart';
 import 'package:khelpratibha/screens/core/splash_screen.dart';
 import 'package:khelpratibha/services/auth_service.dart';
 import 'package:khelpratibha/services/database_service.dart';
 import 'package:khelpratibha/services/storage_service.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,15 +25,10 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        // Core Services that don't change
         Provider<AuthService>(create: (_) => AuthService()),
         Provider<DatabaseService>(create: (_) => DatabaseService()),
         Provider<StorageService>(create: (_) => StorageService()),
-
-        // UI State Notifier
         ChangeNotifierProvider(create: (_) => ThemeNotifier()),
-
-        // Data Providers that hold state and depend on services
         ChangeNotifierProxyProvider<DatabaseService, UserProvider>(
           create: (context) => UserProvider(context.read<DatabaseService>()),
           update: (context, dbService, previous) => previous ?? UserProvider(dbService),
@@ -59,6 +56,9 @@ void main() async {
         ChangeNotifierProxyProvider<DatabaseService, FitnessProvider>(
           create: (context) => FitnessProvider(context.read<DatabaseService>()),
           update: (context, dbService, previous) => previous ?? FitnessProvider(dbService),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => RealtimeProvider(SupabaseClientManager.client),
         ),
       ],
       child: const MyApp(),

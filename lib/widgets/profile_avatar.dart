@@ -12,7 +12,7 @@ class ProfileAvatar extends StatelessWidget {
     super.key,
     this.imageUrl,
     this.imageFile,
-    this.radius = 40,
+    this.radius = 22, // Adjusted default radius from 40 to 22
     this.onTap,
   });
 
@@ -23,7 +23,7 @@ class ProfileAvatar extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(4),
+        padding: const EdgeInsets.all(3), // Reduced padding for a tighter look
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: LinearGradient(
@@ -36,9 +36,9 @@ class ProfileAvatar extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 8, // Slightly reduced blur
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -50,7 +50,7 @@ class ProfileAvatar extends StatelessWidget {
               ? Icon(
             Icons.person,
             size: radius,
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            color: theme.colorScheme.onSurface.withOpacity(0.6),
           )
               : null,
         ),

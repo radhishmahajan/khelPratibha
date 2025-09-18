@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:khelpratibha/config/theme_notifier.dart';
-import 'package:khelpratibha/providers/user_provider.dart';
-import 'package:khelpratibha/screens/dashboard/profile/user_profile_page.dart';
-import 'package:khelpratibha/utils/navigation_helper.dart';
-import 'package:khelpratibha/widgets/profile_avatar.dart';
+import 'package:khelpratibha/widgets/common_app_bar.dart';
 import 'package:provider/provider.dart';
 
 class ScoutDashboard extends StatelessWidget {
@@ -11,35 +8,11 @@ class ScoutDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final userProfile = context.watch<UserProvider>().userProfile;
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     final isLight = themeNotifier.themeMode == ThemeMode.light;
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: const Text('Scout Dashboard'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(isLight ? Icons.dark_mode : Icons.light_mode),
-            color: isLight ? Colors.black : Colors.white,
-            onPressed: () => themeNotifier.toggleTheme(),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 12.0),
-            child: GestureDetector(
-              onTap: () =>
-                  NavigationHelper.navigateToPage(context, const ProfilePage()),
-              child: Hero(
-                tag: "user-avatar",
-                child: ProfileAvatar(imageUrl: userProfile?.avatarUrl, radius: 20),
-              ),
-            ),
-          ),
-        ],
-      ),
+      appBar: const CommonAppBar(),
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -51,7 +24,11 @@ class ScoutDashboard extends StatelessWidget {
             end: Alignment.bottomRight,
           )
               : const LinearGradient(
-            colors: [Color(0xFF0f0c29), Color(0xFF302b63), Color(0xFF24243e)],
+            colors: [
+              Color(0xFF0f0c29),
+              Color(0xFF302b63),
+              Color(0xFF24243e)
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),

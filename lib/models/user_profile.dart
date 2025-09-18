@@ -1,3 +1,4 @@
+// lib/models/user_profile.dart
 import 'package:khelpratibha/models/user_role.dart';
 
 class UserProfile {
@@ -10,7 +11,6 @@ class UserProfile {
   final String? sport;
   final double? heightCm;
   final double? weightKg;
-  final Map<String, dynamic>? personalBests;
 
   UserProfile({
     required this.id,
@@ -22,7 +22,6 @@ class UserProfile {
     this.sport,
     this.heightCm,
     this.weightKg,
-    this.personalBests,
   });
 
   factory UserProfile.fromMap(Map<String, dynamic> map) {
@@ -38,9 +37,6 @@ class UserProfile {
       sport: map['sport'],
       heightCm: (map['height_cm'] as num?)?.toDouble(),
       weightKg: (map['weight_kg'] as num?)?.toDouble(),
-      personalBests: map['personal_bests'] != null
-          ? Map<String, dynamic>.from(map['personal_bests'])
-          : null,
     );
   }
 
@@ -56,7 +52,6 @@ class UserProfile {
       'updated_at': DateTime.now().toIso8601String(),
       'height_cm': heightCm,
       'weight_kg': weightKg,
-      'personal_bests': personalBests,
     };
   }
 
@@ -70,7 +65,6 @@ class UserProfile {
     String? sport,
     double? heightCm,
     double? weightKg,
-    Map<String, dynamic>? personalBests,
   }) {
     return UserProfile(
       id: id ?? this.id,
@@ -82,7 +76,6 @@ class UserProfile {
       sport: sport ?? this.sport,
       heightCm: heightCm ?? this.heightCm,
       weightKg: weightKg ?? this.weightKg,
-      personalBests: personalBests ?? this.personalBests,
     );
   }
 }

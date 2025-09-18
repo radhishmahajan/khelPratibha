@@ -13,19 +13,15 @@ class AuthGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Watch the AuthService for login/logout events
     return StreamBuilder<AuthState>(
       stream: context.watch<AuthService>().authStateChanges,
       builder: (context, snapshot) {
         final session = snapshot.data?.session;
 
         if (session != null) {
-          // If the user is logged in, watch the UserProvider for profile changes
           return Consumer<UserProvider>(
             builder: (context, userProvider, child) {
-              // Fetch initial data if the profile hasn't been loaded yet
               if (userProvider.userProfile == null && !userProvider.isLoading) {
-                // Use a post-frame callback to avoid calling provider during build
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   userProvider.fetchInitialData(session.user.id);
                 });
@@ -38,7 +34,6 @@ class AuthGate extends StatelessWidget {
 
               final userProfile = userProvider.userProfile!;
 
-              // Now, the navigation logic will react to any change in the user's role
               if (userProfile.role == UserRole.unknown) {
                 return const RoleSelectionPage();
               } else {
@@ -47,7 +42,6 @@ class AuthGate extends StatelessWidget {
             },
           );
         } else {
-          // If there's no session, show the LoginPage
           return const LoginPage();
         }
       },

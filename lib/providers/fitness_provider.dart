@@ -16,7 +16,6 @@ class FitnessProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      // Assuming you will add a method in DatabaseService to fetch this data
       _fitnessTestCategories = await _db.fetchFitnessTestCategories();
     } finally {
       _isLoading = false;

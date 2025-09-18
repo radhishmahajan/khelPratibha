@@ -177,7 +177,11 @@ class DatabaseService {
   Future<List<FitnessTestCategory>> fetchFitnessTestCategories() async {
     final response = await supabase
         .from('fitness_test_categories')
-        .select('name, icon_name, fitness_tests(name)');
+        .select('*, fitness_tests(*)');
+
+    if (response.isEmpty) {
+      return [];
+    }
 
     return (response as List)
         .map((item) => FitnessTestCategory.fromMap(item))
