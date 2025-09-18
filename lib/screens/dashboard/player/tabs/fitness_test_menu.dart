@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:khelpratibha/models/fitness_test_category.dart';
+import 'package:khelpratibha/providers/fitness_provider.dart';
 import 'package:khelpratibha/screens/fitness_tracker/fitness_test_page.dart';
+import 'package:provider/provider.dart';
 
 class FitnessTestMenu extends StatefulWidget {
   const FitnessTestMenu({super.key});
@@ -11,70 +14,35 @@ class FitnessTestMenu extends StatefulWidget {
 class _FitnessTestMenuState extends State<FitnessTestMenu> {
   String _searchQuery = '';
 
-  final List<Map<String, dynamic>> fitnessTests = [
-    {
-      'category': 'Anthropometric Tests (Basic Measurements)',
-      'icon': Icons.straighten,
-      'tests': [
-        'Height & Weight',
-      ],
-      'gradient': [const Color(0xFF43A047), const Color(0xFF66BB6A)],
-    },
-    {
-      'category': 'Strength & Power Tests',
-      'icon': Icons.fitness_center,
-      'tests': [
-        'Vertical Jump Test (measures leg explosive power)',
-        'Standing Broad Jump (distance covered in one jump)',
-        'Push-ups Test (upper body strength, reps in 1 min)',
-        'Sit-ups / Crunch Test (core strength, reps in 1 min)',
-      ],
-      'gradient': [const Color(0xFFD84315), const Color(0xFFFF7043)],
-    },
-    {
-      'category': 'Speed & Agility Tests',
-      'icon': Icons.directions_run,
-      'tests': [
-        'Shuttle Run (20m / 40m) (tests speed + agility, back-and-forth sprint)',
-        '30m Sprint (straight-line speed test)',
-      ],
-      'gradient': [const Color(0xFF00ACC1), const Color(0xFF26C6DA)],
-    },
-    {
-      'category': 'Endurance Tests',
-      'icon': Icons.timer,
-      'tests': [
-        '1.6 km (1 mile) Run/Walk Test (cardio endurance)',
-        'Beep Test (Yo-Yo Test) (progressive endurance run, AI can detect laps & timing)',
-      ],
-      'gradient': [const Color(0xFFD81B60), const Color(0xFFF06292)],
-    },
-    {
-      'category': 'Flexibility Tests',
-      'icon': Icons.accessibility_new,
-      'tests': [
-        'Sit-and-Reach Test (lower back & hamstring flexibility)',
-      ],
-      'gradient': [const Color(0xFF5E35B1), const Color(0xFF7E57C2)],
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    // Fetch the fitness tests when the widget is first created
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<FitnessProvider>().fetchFitnessTests();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final fitnessProvider = context.watch<FitnessProvider>();
+    final fitnessTests = fitnessProvider.fitnessTestCategories;
     final theme = Theme.of(context);
     const headerImage =
         'https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2';
     const headerText = 'Fitness Tracker';
 
     final filteredTests = fitnessTests.where((category) {
-      final categoryName = category['category'].toString().toLowerCase();
-      final tests = (category['tests'] as List<String>)
-          .where((test) => test.toLowerCase().contains(_searchQuery.toLowerCase()))
+      final categoryName = category.category.toLowerCase();
+      final tests = category.tests
+          .where((test) => test.name.toLowerCase().contains(_searchQuery.toLowerCase()))
           .toList();
       return categoryName.contains(_searchQuery.toLowerCase()) || tests.isNotEmpty;
     }).toList();
 
-    return ListView(
+    return fitnessProvider.isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : ListView(
       padding: const EdgeInsets.all(16.0),
       children: [
         // Header Section
@@ -92,7 +60,7 @@ class _FitnessTestMenuState extends State<FitnessTestMenu> {
               Container(
                 height: 150,
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.4),
+                  color: Colors.black.withOpacity(0.4),
                 ),
               ),
               Text(
@@ -139,18 +107,18 @@ class _FitnessTestMenuState extends State<FitnessTestMenu> {
 
         // Fitness Test Cards
         ...filteredTests.map((testCategory) {
-          final tests = (testCategory['tests'] as List<String>)
+          final tests = testCategory.tests
               .where((test) =>
-              test.toLowerCase().contains(_searchQuery.toLowerCase()))
+              test.name.toLowerCase().contains(_searchQuery.toLowerCase()))
               .toList();
           if (tests.isEmpty && _searchQuery.isNotEmpty) {
             return const SizedBox.shrink(); // Hide category if no tests match search
           }
           return FitnessTestCard(
-            category: testCategory['category'],
-            icon: testCategory['icon'],
+            category: testCategory.category,
+            icon: testCategory.icon,
             tests: tests,
-            gradient: testCategory['gradient'],
+            gradient: testCategory.gradient,
           );
         }).toList(),
       ],
@@ -161,7 +129,7 @@ class _FitnessTestMenuState extends State<FitnessTestMenu> {
 class FitnessTestCard extends StatelessWidget {
   final String category;
   final IconData icon;
-  final List<String> tests;
+  final List<FitnessTest> tests;
   final List<Color> gradient;
 
   const FitnessTestCard({
@@ -222,7 +190,7 @@ class FitnessTestCard extends StatelessWidget {
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (context) => FitnessTestPage(testName: test),
+                            builder: (context) => FitnessTestPage(testName: test.name),
                           ),
                         );
                       },
@@ -239,7 +207,7 @@ class FitnessTestCard extends StatelessWidget {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                test,
+                                test.name,
                                 style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white),
                               ),
                             ),

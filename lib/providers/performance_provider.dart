@@ -26,6 +26,23 @@ class PerformanceProvider extends ChangeNotifier {
         _performanceHistory.length;
   }
 
+  double getBestScoreForCategory(String? category) {
+    final history = category == null
+        ? _performanceHistory
+        : _performanceHistory.where((s) => s.testName == category).toList();
+    if (history.isEmpty) return 0;
+    return history.map((s) => s.score).reduce(max);
+  }
+
+  double getAverageScoreForCategory(String? category) {
+    final history = category == null
+        ? _performanceHistory
+        : _performanceHistory.where((s) => s.testName == category).toList();
+    if (history.isEmpty) return 0;
+    return history.map((s) => s.score).reduce((a, b) => a + b) /
+        history.length;
+  }
+
   Future<void> fetchPerformanceHistory() async {
     _isLoading = true;
     notifyListeners();

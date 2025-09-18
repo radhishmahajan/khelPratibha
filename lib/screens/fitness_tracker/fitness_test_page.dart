@@ -85,9 +85,16 @@ class _FitnessTestPageState extends State<FitnessTestPage> {
       final achievementProvider = context.read<AchievementProvider>();
       final goalProvider = context.read<GoalProvider>();
 
+      // FIX: Extract the core test name before saving to the database.
+      String coreTestName = widget.testName;
+      if (widget.testName.contains('(')) {
+        coreTestName = widget.testName.split('(').first.trim();
+      }
+
+
       if (!_isPhotoTest) {
         await dbService.saveStrengthTestResult(
-          testName: widget.testName,
+          testName: coreTestName,
           score: result['score'],
           reps: result['reps'],
         );

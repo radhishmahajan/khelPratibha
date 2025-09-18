@@ -5,6 +5,7 @@ import 'package:khelpratibha/config/app_theme.dart';
 import 'package:khelpratibha/config/theme_notifier.dart';
 import 'package:khelpratibha/providers/achievement_provider.dart';
 import 'package:khelpratibha/providers/challenge_provider.dart';
+import 'package:khelpratibha/providers/fitness_provider.dart';
 import 'package:khelpratibha/providers/goal_provider.dart';
 import 'package:khelpratibha/providers/leaderboard_provider.dart';
 import 'package:khelpratibha/providers/performance_provider.dart';
@@ -54,6 +55,10 @@ void main() async {
         ChangeNotifierProxyProvider<DatabaseService, ChallengeProvider>(
           create: (context) => ChallengeProvider(context.read<DatabaseService>()),
           update: (context, dbService, previous) => previous ?? ChallengeProvider(dbService),
+        ),
+        ChangeNotifierProxyProvider<DatabaseService, FitnessProvider>(
+          create: (context) => FitnessProvider(context.read<DatabaseService>()),
+          update: (context, dbService, previous) => previous ?? FitnessProvider(dbService),
         ),
       ],
       child: const MyApp(),

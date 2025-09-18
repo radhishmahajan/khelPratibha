@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:khelpratibha/config/theme_notifier.dart';
 import 'package:khelpratibha/models/user_profile.dart';
 import 'package:khelpratibha/providers/user_provider.dart';
-import 'package:khelpratibha/services/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:khelpratibha/models/user_role.dart';
@@ -77,22 +76,15 @@ class _RoleSelectionPageState extends State<RoleSelectionPage>
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     final isLight = themeNotifier.themeMode == ThemeMode.light;
 
-    const playerGradient = LinearGradient(
-      colors: [Color(0xFF00C9FF), Color(0xFF92FE9D)],
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-    );
+    // Define theme-aware colors for the icons
+    final athleteColor = isLight ? Colors.blue.shade700 : Colors.blue.shade300;
+    final scoutColor = isLight ? Colors.pink.shade600 : Colors.orange.shade300;
 
-    const scoutGradient = LinearGradient(
-      colors: [Color(0xFFF12711), Color(0xFFF5AF19)],
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-    );
 
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text("Select Your Role"),
+        title: const Text("Welcome"),
         backgroundColor: Colors.transparent,
         elevation: 0,
         automaticallyImplyLeading: false, // Hide the default back button
@@ -123,71 +115,81 @@ class _RoleSelectionPageState extends State<RoleSelectionPage>
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: Column(
-                      children: [
-                        Text(
-                          'Who are you?',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineMedium
-                              ?.copyWith(fontWeight: FontWeight.bold),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: Container(
+                      padding: const EdgeInsets.all(24.0),
+                      decoration: BoxDecoration(
+                        color: isLight
+                            ? Colors.white.withValues(alpha: 0.5)
+                            : Colors.black.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: isLight
+                              ? Colors.white.withValues(alpha: 0.7)
+                              : Colors.grey.shade800,
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Choose your role to get a personalized experience.',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 48),
-                FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: RoleCard(
-                      icon: Icons.sports_soccer,
-                      title: "Player",
-                      description:
-                      "I'm an athlete looking to train and get analyzed.",
-                      gradient: playerGradient,
-                      onTap: () => _onRoleSelected(context, UserRole.player),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: RoleCard(
-                      icon: Icons.search,
-                      title: "Scout",
-                      description:
-                      "I'm looking to discover and track talented athletes.",
-                      gradient: scoutGradient,
-                      onTap: () => _onRoleSelected(context, UserRole.scout),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 48),
-                FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: TextButton.icon(
-                    onPressed: () {
-                      context.read<AuthService>().signOut();
-                    },
-                    icon: const Icon(Icons.arrow_back),
-                    label: const Text('Go Back to Sign In'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: isLight ? Colors.black54 : Colors.white70,
+                      ),
+                      child: Column(
+                        children: [
+                          FadeTransition(
+                            opacity: _fadeAnimation,
+                            child: SlideTransition(
+                              position: _slideAnimation,
+                              child: Column(
+                                children: [
+                                  Text(
+                                    'Welcome to SAI TalentFinder',
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineLarge
+                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'Choose your role to access the appropriate dashboard',
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(context).textTheme.bodyMedium,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 48),
+                          FadeTransition(
+                            opacity: _fadeAnimation,
+                            child: SlideTransition(
+                              position: _slideAnimation,
+                              child: RoleCard(
+                                icon: Icons.person_outline,
+                                title: "I'm an Athlete",
+                                description:
+                                "Take assessments and track progress",
+                                color: athleteColor,
+                                onTap: () => _onRoleSelected(context, UserRole.player),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          FadeTransition(
+                            opacity: _fadeAnimation,
+                            child: SlideTransition(
+                              position: _slideAnimation,
+                              child: RoleCard(
+                                icon: Icons.shield_outlined,
+                                title: "I'm a SAI Official",
+                                description:
+                                "Monitor and evaluate talent",
+                                color: scoutColor,
+                                onTap: () => _onRoleSelected(context, UserRole.scout),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -205,7 +207,7 @@ class RoleCard extends StatelessWidget {
   final String title;
   final String description;
   final VoidCallback onTap;
-  final Gradient gradient;
+  final Color color;
 
   const RoleCard({
     super.key,
@@ -213,7 +215,7 @@ class RoleCard extends StatelessWidget {
     required this.title,
     required this.description,
     required this.onTap,
-    required this.gradient,
+    required this.color,
   });
 
   @override
@@ -223,54 +225,47 @@ class RoleCard extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.all(2),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          gradient: gradient,
-          boxShadow: [
+          color: isLight ? Colors.white : theme.colorScheme.surface.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: isLight ? Colors.grey.shade300 : Colors.grey.shade800),
+          boxShadow: isLight ? [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
+              color: Colors.grey.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 5),
             )
-          ],
+          ] : [],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(22),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-            child: Container(
-              padding: const EdgeInsets.all(24.0),
-              color: isLight
-                  ? Colors.white.withValues(alpha: 0.6)
-                  : Colors.black.withValues(alpha: 0.4),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: color.withValues(alpha: 0.1),
+              child: Icon(icon, size: 28, color: color),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ShaderMask(
-                    blendMode: BlendMode.srcIn,
-                    shaderCallback: (bounds) => gradient.createShader(
-                      Rect.fromLTWH(0, 0, bounds.width, bounds.height),
-                    ),
-                    child: Icon(icon, size: 48),
-                  ),
-                  const SizedBox(height: 16),
                   Text(
                     title,
-                    style: theme.textTheme.headlineSmall
+                    style: theme.textTheme.titleLarge
                         ?.copyWith(fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
                   Text(
                     description,
-                    textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium,
                   ),
                 ],
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
