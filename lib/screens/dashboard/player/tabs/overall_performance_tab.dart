@@ -75,12 +75,12 @@ class _OverallPerformanceTabState extends State<OverallPerformanceTab> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               decoration: BoxDecoration(
                 color: isLight
-                    ? Colors.white.withOpacity(0.5)
-                    : Colors.black.withOpacity(0.3),
+                    ? Colors.white.withValues(alpha: 0.5)
+                    : Colors.black.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: isLight
-                      ? Colors.white.withOpacity(0.7)
+                      ? Colors.white.withValues(alpha: 0.7)
                       : Colors.grey.shade800,
                 ),
               ),
@@ -90,7 +90,7 @@ class _OverallPerformanceTabState extends State<OverallPerformanceTab> {
                 isExpanded: true,
                 underline: const SizedBox.shrink(),
                 icon: Icon(Icons.arrow_drop_down_rounded, color: theme.colorScheme.primary),
-                dropdownColor: isLight ? Colors.white.withOpacity(0.8) : Colors.black.withOpacity(0.7),
+                dropdownColor: isLight ? Colors.white.withValues(alpha: 0.8) : Colors.black.withValues(alpha: 0.7),
                 items: categories
                     .map((category) => DropdownMenuItem(
                   value: category,
@@ -227,7 +227,7 @@ class _PerformanceSummaryCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-              color: startColor.withOpacity(0.25),
+              color: startColor.withValues(alpha: 0.25),
               blurRadius: 12,
               offset: const Offset(0, 6))
         ],
@@ -272,7 +272,7 @@ class _EmptyTrendPlaceholder extends StatelessWidget {
     return Center(
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         Icon(Icons.show_chart,
-            size: 56, color: theme.colorScheme.primary.withOpacity(0.14)),
+            size: 56, color: theme.colorScheme.primary.withValues(alpha: 0.14)),
         const SizedBox(height: 12),
         Text('No trend data yet',
             style: theme.textTheme.bodyLarge
@@ -418,8 +418,8 @@ class _MultiDayLineChart extends StatelessWidget {
               belowBarData: BarAreaData(
                 show: true,
                 gradient: LinearGradient(colors: [
-                  theme.colorScheme.primary.withOpacity(0.18),
-                  theme.colorScheme.secondary.withOpacity(0.02)
+                  theme.colorScheme.primary.withValues(alpha: 0.18),
+                  theme.colorScheme.secondary.withValues(alpha: 0.02)
                 ]),
               ),
             ),
@@ -462,7 +462,7 @@ class _ProgressTrackingCard extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: theme.cardColor.withOpacity(0.6),
+              color: theme.cardColor.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
@@ -680,7 +680,7 @@ class _PersonalBestCard extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: theme.colorScheme.secondary.withOpacity(0.12),
+              color: theme.colorScheme.secondary.withValues(alpha: 0.12),
             ),
             child: Icon(_getIconData(best['icon_name']),
                 color: theme.colorScheme.secondary),
@@ -691,7 +691,7 @@ class _PersonalBestCard extends StatelessWidget {
           trailing: Text(
             'Score: ${best['best_score'].toStringAsFixed(1)} | Reps: ${best['best_reps']}',
             style: theme.textTheme.bodySmall
-                ?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.6)),
+                ?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
           ),
         ),
       ),

@@ -8,7 +8,6 @@ class PersonalBestsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final personalBests = context.watch<PerformanceProvider>().personalBests;
-    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -75,7 +74,7 @@ class _PersonalBestCard extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: theme.colorScheme.secondary.withOpacity(0.12),
+              color: theme.colorScheme.secondary.withValues(alpha: 0.12),
             ),
             child: Icon(_getIconData(best['icon_name']),
                 color: theme.colorScheme.secondary),
@@ -86,7 +85,7 @@ class _PersonalBestCard extends StatelessWidget {
           trailing: Text(
             'Score: ${best['best_score'].toStringAsFixed(1)} | Reps: ${best['best_reps']}',
             style: theme.textTheme.bodySmall
-                ?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.6)),
+                ?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
           ),
         ),
       ),

@@ -139,7 +139,7 @@ class _HomePageState extends State<HomePage> {
                       style: theme.textTheme.bodyLarge?.copyWith(
                         height: 1.5,
                         color: (isLight ? Colors.black : Colors.white)
-                            .withOpacity(0.7),
+                            .withValues(alpha: 0.7),
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -177,7 +177,6 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: OutlinedButton(
-                            child: const Text("View Details"),
                             onPressed: _scrollToFeatures,
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -193,6 +192,7 @@ class _HomePageState extends State<HomePage> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
+                            child: const Text("View Details"),
                           ),
                         ),
                       ],
@@ -226,7 +226,7 @@ class _HomePageState extends State<HomePage> {
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyLarge?.copyWith(
                         color: (isLight ? Colors.black : Colors.white)
-                            .withOpacity(0.7),
+                            .withValues(alpha: 0.7),
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -276,7 +276,7 @@ class _HomePageState extends State<HomePage> {
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyLarge?.copyWith(
                         color: (isLight ? Colors.black : Colors.white)
-                            .withOpacity(0.7),
+                            .withValues(alpha: 0.7),
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -400,7 +400,7 @@ class _HomePageState extends State<HomePage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isLight ? Colors.white : Colors.grey.shade800.withOpacity(0.5),
+          color: isLight ? Colors.white : Colors.grey.shade800.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
               color: isLight ? Colors.grey.shade300 : Colors.grey.shade700),
@@ -468,7 +468,7 @@ class _FeatureCard extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color:
-        isLight ? Colors.white : theme.colorScheme.surface.withOpacity(0.5),
+        isLight ? Colors.white : theme.colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
             color: isLight ? Colors.grey.shade200 : Colors.grey.shade800),
@@ -477,7 +477,7 @@ class _FeatureCard extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 30,
-            backgroundColor: iconColor.withOpacity(0.1),
+            backgroundColor: iconColor.withValues(alpha: 0.1),
             child: Icon(icon, size: 32, color: iconColor),
           ),
           const SizedBox(height: 16),
@@ -491,7 +491,7 @@ class _FeatureCard extends StatelessWidget {
             description,
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: (isLight ? Colors.black : Colors.white).withOpacity(0.7),
+              color: (isLight ? Colors.black : Colors.white).withValues(alpha: 0.7),
             ),
           ),
         ],
@@ -522,7 +522,7 @@ class _StatItem extends StatelessWidget {
         Text(
           label,
           style: theme.textTheme.bodyLarge?.copyWith(
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withValues(alpha: 0.8),
           ),
         ),
       ],
@@ -552,7 +552,7 @@ class _AssessmentCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color:
-        isLight ? Colors.white : theme.colorScheme.surface.withOpacity(0.5),
+        isLight ? Colors.white : theme.colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
             color: isLight ? Colors.grey.shade200 : Colors.grey.shade800),
@@ -561,7 +561,7 @@ class _AssessmentCard extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 20,
-            backgroundColor: iconColor.withOpacity(0.15),
+            backgroundColor: iconColor.withValues(alpha: 0.15),
             child: Icon(icon, size: 24, color: iconColor),
           ),
           const SizedBox(width: 16),
@@ -577,7 +577,7 @@ class _AssessmentCard extends StatelessWidget {
               Text(
                 description,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: (isLight ? Colors.black : Colors.white).withOpacity(0.7),
+                  color: (isLight ? Colors.black : Colors.white).withValues(alpha: 0.7),
                 ),
               ),
             ],

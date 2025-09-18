@@ -3,29 +3,24 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:khelpratibha/config/theme_notifier.dart';
-import 'package:khelpratibha/models/fitness_test.dart';
-import 'package:khelpratibha/providers/achievement_provider.dart';
-import 'package:khelpratibha/providers/goal_provider.dart';
-import 'package:khelpratibha/providers/leaderboard_provider.dart';
-import 'package:khelpratibha/providers/performance_provider.dart';
-import 'package:khelpratibha/providers/user_provider.dart';
+import 'package:khelpratibha/models/challenge.dart';
+import 'package:khelpratibha/providers/challenge_provider.dart';
 import 'package:khelpratibha/services/analysis_service.dart';
-import 'package:khelpratibha/services/database_service.dart';
 import 'package:khelpratibha/utils/test_instructions.dart';
 import 'package:khelpratibha/widgets/info_banner.dart';
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
 
-class TestDetailPage extends StatefulWidget {
-  final FitnessTest test;
+class CompleteChallengePage extends StatefulWidget {
+  final Challenge challenge;
 
-  const TestDetailPage({super.key, required this.test});
+  const CompleteChallengePage({super.key, required this.challenge});
 
   @override
-  State<TestDetailPage> createState() => _TestDetailPageState();
+  State<CompleteChallengePage> createState() => _CompleteChallengePageState();
 }
 
-class _TestDetailPageState extends State<TestDetailPage> {
+class _CompleteChallengePageState extends State<CompleteChallengePage> {
   XFile? _mediaFile;
   VideoPlayerController? _videoPlayerController;
   bool _isAnalyzing = false;
@@ -45,7 +40,7 @@ class _TestDetailPageState extends State<TestDetailPage> {
   }
 
   bool get _isPhotoTest {
-    return widget.test.name.toLowerCase().contains('height & weight');
+    return widget.challenge.linkedTest.name.toLowerCase().contains('height & weight');
   }
 
   Future<void> _initializeVideoPlayer(XFile file) async {
@@ -92,36 +87,21 @@ class _TestDetailPageState extends State<TestDetailPage> {
         _analysisResult = result;
       });
 
-      final userProvider = context.read<UserProvider>();
-      final dbService = context.read<DatabaseService>();
-      final performanceProvider = context.read<PerformanceProvider>();
-      final leaderboardProvider = context.read<LeaderboardProvider>();
-      final achievementProvider = context.read<AchievementProvider>();
-      final goalProvider = context.read<GoalProvider>();
-
-      String coreTestName = widget.test.name.split('(').first.trim();
-
       if (!_isPhotoTest) {
-        await dbService.saveStrengthTestResult(
-          testName: coreTestName,
-          score: result['score'],
-          reps: result['reps'],
-        );
-        await achievementProvider.checkAndUnlockAchievements(result['reps'], 0);
-        await goalProvider.addGoal('Improve ${widget.test.name} score by 10%');
+        if(mounted) {
+          await context.read<ChallengeProvider>().saveChallengeResult(
+            challengeId: widget.challenge.id,
+            testName: widget.challenge.linkedTest.name,
+            score: result['score'],
+            reps: result['reps'],
+          );
+        }
       } else {
-        final updatedProfile = userProvider.userProfile!.copyWith(
-          heightCm: result['height_cm'],
-          weightKg: result['weight_kg'],
-        );
-        await userProvider.saveUserProfile(updatedProfile);
+        // No score to save for a photo test in a challenge context.
       }
 
-      await performanceProvider.fetchPerformanceHistory();
-      await leaderboardProvider.fetchLeaderboard();
-
       if (mounted) {
-        _showNotification('Analysis complete and data saved!', NotificationType.success);
+        _showNotification('Analysis complete and results saved to leaderboard!', NotificationType.success);
       }
     } catch (e) {
       if (mounted) {
@@ -138,13 +118,14 @@ class _TestDetailPageState extends State<TestDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final themeNotifier = Provider.of<ThemeNotifier>(context);
-    final isLight = themeNotifier.themeMode == ThemeMode.light;
+    final theme = Theme.of(context);
+    final isLight = Provider.of<ThemeNotifier>(context).themeMode == ThemeMode.light;
+    final instructions = getInstructionsForTest(widget.challenge.linkedTest.name);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(widget.test.name),
+        title: Text(widget.challenge.title),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -166,7 +147,69 @@ class _TestDetailPageState extends State<TestDetailPage> {
         ),
         child: Stack(
           children: [
-            _buildNewMediaAnalysisUI(),
+            SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          '${widget.challenge.linkedTest.name} Test',
+                          style: theme.textTheme.headlineMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        const Spacer(),
+                        _buildTag(widget.challenge.linkedTest.difficulty, Colors.deepOrange, isLight),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.challenge.linkedTest.description,
+                      style: theme.textTheme.bodyLarge?.copyWith(color: theme.hintColor),
+                    ),
+                    const SizedBox(height: 24),
+                    _RecordingArea(
+                      mediaFile: _mediaFile,
+                      isPhotoTest: _isPhotoTest,
+                      videoPlayerController: _videoPlayerController,
+                      onStartRecording: _pickMedia,
+                    ),
+                    const SizedBox(height: 24),
+                    _TestInstructionsCard(
+                      duration: widget.challenge.linkedTest.duration,
+                      isLight: isLight,
+                      steps: instructions.steps,
+                      features: instructions.features,
+                    ),
+                    const SizedBox(height: 24),
+                    if (_mediaFile != null)
+                      _isAnalyzing
+                          ? const Center(child: CircularProgressIndicator())
+                          : SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: _analyzeMedia,
+                          icon: const Icon(Icons.analytics_outlined),
+                          label: const Text('Analyze Performance'),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    if (_analysisResult != null)
+                      _AnalysisResultCard(
+                        analysisResult: _analysisResult!,
+                        isPhotoTest: _isPhotoTest,
+                      ),
+                  ],
+                ),
+              ),
+            ),
             if (_notification != null)
               Positioned(
                 top: 0,
@@ -176,76 +219,6 @@ class _TestDetailPageState extends State<TestDetailPage> {
                   notification: _notification!,
                   onDismiss: () => setState(() => _notification = null),
                 ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNewMediaAnalysisUI() {
-    final theme = Theme.of(context);
-    final isLight = theme.brightness == Brightness.light;
-    final instructions = getInstructionsForTest(widget.test.name);
-
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  widget.test.name,
-                  style: theme.textTheme.headlineMedium
-                      ?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const Spacer(),
-                _buildTag(widget.test.difficulty, Colors.deepOrange, isLight),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              widget.test.description,
-              style: theme.textTheme.bodyLarge?.copyWith(color: theme.hintColor),
-            ),
-            const SizedBox(height: 24),
-            _RecordingArea(
-              mediaFile: _mediaFile,
-              isPhotoTest: _isPhotoTest,
-              videoPlayerController: _videoPlayerController,
-              onStartRecording: _pickMedia,
-            ),
-            const SizedBox(height: 24),
-            _TestInstructionsCard(
-              duration: widget.test.duration,
-              isLight: isLight,
-              steps: instructions.steps,
-              features: instructions.features,
-            ),
-            const SizedBox(height: 24),
-            if (_mediaFile != null)
-              _isAnalyzing
-                  ? const Center(child: CircularProgressIndicator())
-                  : SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _analyzeMedia,
-                  icon: const Icon(Icons.analytics_outlined),
-                  label: const Text('Analyze Performance'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-            if (_analysisResult != null)
-              _AnalysisResultCard(
-                analysisResult: _analysisResult!,
-                isPhotoTest: _isPhotoTest,
               ),
           ],
         ),
@@ -304,8 +277,7 @@ class _RecordingArea extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 'Upload Area',
-                style: theme.textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -321,8 +293,7 @@ class _RecordingArea extends StatelessWidget {
                   ? (isPhotoTest)
                   ? ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child:
-                Image.file(File(mediaFile!.path), fit: BoxFit.cover),
+                child: Image.file(File(mediaFile!.path), fit: BoxFit.cover),
               )
                   : (videoPlayerController != null &&
                   videoPlayerController!.value.isInitialized)

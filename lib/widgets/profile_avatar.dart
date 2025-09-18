@@ -36,7 +36,7 @@ class ProfileAvatar extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 8, // Slightly reduced blur
               offset: const Offset(0, 4),
             ),
@@ -50,7 +50,7 @@ class ProfileAvatar extends StatelessWidget {
               ? Icon(
             Icons.person,
             size: radius,
-            color: theme.colorScheme.onSurface.withOpacity(0.6),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
           )
               : null,
         ),

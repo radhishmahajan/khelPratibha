@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:khelpratibha/models/achievement.dart';
 import 'package:khelpratibha/models/challenge.dart';
 import 'package:khelpratibha/models/challenge_leaderboard_entry.dart';
@@ -161,7 +160,10 @@ class DatabaseService {
   }
 
   Future<List<Challenge>> fetchChallenges() async {
-    final response = await supabase.from('challenges').select();
+    final response = await supabase
+        .from('challenges')
+        .select('*, fitness_tests(id, name, description, duration, difficulty, video_url)');
+
     return (response as List).map((item) => Challenge.fromMap(item)).toList();
   }
 
@@ -186,5 +188,64 @@ class DatabaseService {
     return (response as List)
         .map((item) => FitnessTestCategory.fromMap(item))
         .toList();
+  }
+
+  Future<void> joinChallenge(String challengeId) async {
+    final userId = supabase.auth.currentUser!.id;
+    await supabase.from('joined_challenges').insert({
+      'user_id': userId,
+      'challenge_id': challengeId,
+    });
+  }
+
+  Future<List<Challenge>> fetchJoinedChallenges() async {
+    final userId = supabase.auth.currentUser!.id;
+    final response = await supabase
+        .from('joined_challenges')
+        .select('*, challenges(*, fitness_tests(id, name, description, duration, difficulty, video_url))')
+        .eq('user_id', userId);
+
+    return (response as List).map((item) {
+      final challengeData = item['challenges'] as Map<String, dynamic>;
+      return Challenge.fromMap({
+        ...challengeData,
+        'is_joined': true,
+        'user_progress': item['user_progress'],
+        'time_limit': item['time_limit'],
+      });
+    }).toList();
+  }
+
+  Future<void> saveChallengeResult({
+    required String challengeId,
+    required double score,
+    required int reps,
+    required String testName,
+  }) async {
+    final userId = supabase.auth.currentUser!.id;
+    final testResponse = await supabase
+        .from('fitness_tests')
+        .select('id')
+        .eq('name', testName)
+        .limit(1)
+        .maybeSingle();
+
+    if (testResponse == null) {
+      throw Exception('Fitness test "$testName" not found.');
+    }
+
+    final testId = testResponse['id'];
+
+    await supabase.from('challenge_test_results').insert({
+      'user_id': userId,
+      'challenge_id': challengeId,
+      'test_id': testId,
+      'score': score,
+      'reps': reps,
+    });
+
+    await supabase.from('joined_challenges').update({
+      'user_progress': score,
+    }).eq('user_id', userId).eq('challenge_id', challengeId);
   }
 }

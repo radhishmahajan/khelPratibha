@@ -1,3 +1,4 @@
+// lib/screens/dashboard/profile/edit_profile_page.dart
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -20,7 +21,6 @@ class EditProfilePage extends StatefulWidget {
 class _EditProfilePageState extends State<EditProfilePage> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _fullNameController;
-  late TextEditingController _sportController;
   DateTime? _dateOfBirth;
   XFile? _selectedImage;
   bool _isLoading = false;
@@ -34,7 +34,6 @@ class _EditProfilePageState extends State<EditProfilePage> with SingleTickerProv
     super.initState();
     final userProfile = context.read<UserProvider>().userProfile;
     _fullNameController = TextEditingController(text: userProfile?.fullName);
-    _sportController = TextEditingController(text: userProfile?.sport);
     _dateOfBirth = userProfile?.dateOfBirth;
 
     _animationController = AnimationController(
@@ -56,7 +55,6 @@ class _EditProfilePageState extends State<EditProfilePage> with SingleTickerProv
   @override
   void dispose() {
     _fullNameController.dispose();
-    _sportController.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -98,7 +96,6 @@ class _EditProfilePageState extends State<EditProfilePage> with SingleTickerProv
       final updatedProfile = currentProfile.copyWith(
         fullName: _fullNameController.text.trim(),
         avatarUrl: avatarUrl,
-        sport: _sportController.text.trim(),
         dateOfBirth: _dateOfBirth,
       );
 
@@ -223,23 +220,6 @@ class _EditProfilePageState extends State<EditProfilePage> with SingleTickerProv
                       ),
                     ),
                     const SizedBox(height: 24),
-                    _buildGlassCard(
-                      isLight: isLight,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Sporting Information', style: theme.textTheme.titleLarge),
-                          const SizedBox(height: 20),
-                          CustomInputField(
-                            controller: _sportController,
-                            labelText: 'Primary Sport',
-                            prefixIcon: Icons.sports_soccer_outlined,
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 40),
                     _isLoading
                         ? const Center(child: CircularProgressIndicator())
                         : _buildGradientButton(
@@ -264,10 +244,10 @@ class _EditProfilePageState extends State<EditProfilePage> with SingleTickerProv
         child: Container(
           padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
-            color: isLight ? Colors.white.withOpacity(0.5) : Colors.black.withOpacity(0.3),
+            color: isLight ? Colors.white.withValues(alpha: 0.5) : Colors.black.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: isLight ? Colors.white.withOpacity(0.7) : Colors.grey.shade800,
+              color: isLight ? Colors.white.withValues(alpha: 0.7) : Colors.grey.shade800,
             ),
           ),
           child: child,
@@ -292,7 +272,7 @@ class _EditProfilePageState extends State<EditProfilePage> with SingleTickerProv
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),

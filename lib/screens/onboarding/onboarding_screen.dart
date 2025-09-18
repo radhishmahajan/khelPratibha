@@ -110,12 +110,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
             color: isLight
-                ? Colors.white.withOpacity(0.5)
-                : Colors.black.withOpacity(0.3),
+                ? Colors.white.withValues(alpha: 0.5)
+                : Colors.black.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(50),
             border: Border.all(
               color: isLight
-                  ? Colors.white.withOpacity(0.7)
+                  ? Colors.white.withValues(alpha: 0.7)
                   : Colors.grey.shade800,
             ),
           ),
@@ -148,7 +148,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   },
                   child: CircleAvatar(
                     radius: 25,
-                    backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                    backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
                     child: Icon(
                       _currentPage == 2 ? Icons.done : Icons.arrow_forward_ios,
                       color: Colors.white,

@@ -53,139 +53,138 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     final isLight = themeNotifier.themeMode == ThemeMode.light;
     final theme = Theme.of(context);
 
-    return SafeArea(
-      child: Scaffold(
-        extendBodyBehindAppBar: true,
-        appBar: AppBar(
-          title: const Text('Profile'),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          actions: [
-            IconButton(
-              tooltip: 'Sign Out',
-              icon: Icon(Icons.logout, color: isLight? Colors.black : Colors.white,),
-              onPressed: () async {
-                await context.read<AuthService>().signOut();
-                if (context.mounted) {
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (context) => const AuthGate()),
-                        (route) => false,
-                  );
-                }
-              },
-            ),
-          ],
-        ),
-        body: Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: BoxDecoration(
-            gradient: isLight
-                ? const LinearGradient(
-              colors: [Color(0xFFFFF1F5), Color(0xFFE8E2FF)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            )
-                : const LinearGradient(
-              colors: [Color(0xFF0f0c29), Color(0xFF302b63), Color(0xFF24243e)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        title: const Text('Profile'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            tooltip: 'Sign Out',
+            icon: Icon(Icons.logout, color: isLight? Colors.black : Colors.white,),
+            onPressed: () async {
+              await context.read<AuthService>().signOut();
+              if (context.mounted) {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => const AuthGate()),
+                      (route) => false,
+                );
+              }
+            },
           ),
-          child: SafeArea(
-            child: userProfile == null
-                ? const Center(child: CircularProgressIndicator())
-                : FadeTransition(
-              opacity: _fadeAnimation,
-              child: SlideTransition(
-                position: _slideAnimation,
-                child: ListView(
-                  padding: const EdgeInsets.all(16.0),
-                  children: [
-                    const SizedBox(height: 16),
-                    Center(
-                      child: ProfileAvatar(
-                        imageUrl: userProfile.avatarUrl,
-                        radius: 60,
-                      ),
+        ],
+      ),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: isLight
+              ? const LinearGradient(
+            colors: [Color(0xFFFFF1F5), Color(0xFFE8E2FF)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          )
+              : const LinearGradient(
+            colors: [Color(0xFF0f0c29), Color(0xFF302b63), Color(0xFF24243e)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: SafeArea(
+          child: userProfile == null
+              ? const Center(child: CircularProgressIndicator())
+              : FadeTransition(
+            opacity: _fadeAnimation,
+            child: SlideTransition(
+              position: _slideAnimation,
+              child: ListView(
+                padding: const EdgeInsets.all(16.0),
+                children: [
+                  const SizedBox(height: 16),
+                  Center(
+                    child: ProfileAvatar(
+                      imageUrl: userProfile.avatarUrl,
+                      radius: 60,
                     ),
-                    const SizedBox(height: 16),
-                    Text(
-                      userProfile.fullName ?? 'Athlete',
-                      style: theme.textTheme.displaySmall,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      userProfile.email,
-                      style: theme.textTheme.bodyMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 32),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: isLight ? Colors.white.withOpacity(0.5) : Colors.black.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: isLight ? Colors.white.withOpacity(0.7) : Colors.grey.shade800,
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              _buildProfileInfoTile(
-                                icon: Icons.shield_outlined,
-                                title: 'Role',
-                                subtitle: userProfile.role.name[0].toUpperCase() + userProfile.role.name.substring(1),
-                                theme: theme,
-                              ),
-                              const Divider(height: 1),
-                              _buildProfileInfoTile(
-                                icon: Icons.sports_soccer_outlined,
-                                title: 'Primary Sport',
-                                subtitle: userProfile.sport ?? 'Not specified',
-                                theme: theme,
-                              ),
-                              const Divider(height: 1),
-                              _buildProfileInfoTile(
-                                icon: Icons.cake_outlined,
-                                title: 'Date of Birth',
-                                subtitle: userProfile.dateOfBirth?.toLocal().toString().split(' ')[0] ?? 'Not specified',
-                                theme: theme,
-                              ),
-                              const Divider(height: 1),
-                              _buildProfileInfoTile(
-                                icon: Icons.height,
-                                title: 'Height',
-                                subtitle: userProfile.heightCm != null ? '${userProfile.heightCm!.toStringAsFixed(1)} cm' : 'Not specified',
-                                theme: theme,
-                              ),
-                              const Divider(height: 1),
-                              _buildProfileInfoTile(
-                                icon: Icons.fitness_center,
-                                title: 'Weight',
-                                subtitle: userProfile.weightKg != null ? '${userProfile.weightKg!.toStringAsFixed(1)} kg' : 'Not specified',
-                                theme: theme,
-                              ),
-                            ],
-                          ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    userProfile.fullName ?? 'Athlete',
+                    style: theme.textTheme.displaySmall,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    userProfile.email,
+                    style: theme.textTheme.bodyMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 32),
+                  _buildGlassCard(
+                    isLight: isLight,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Personal Details', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 20),
+                        _ProfileInfoTile(
+                          icon: Icons.shield_outlined,
+                          title: 'Role',
+                          subtitle: userProfile.role.name[0].toUpperCase() + userProfile.role.name.substring(1),
+                          color: Colors.deepPurple,
                         ),
-                      ),
+                        const SizedBox(height: 16),
+                        _ProfileInfoTile(
+                          icon: Icons.sports_soccer_outlined,
+                          title: 'Primary Sport',
+                          subtitle: userProfile.sport ?? 'Not specified',
+                          color: Colors.orange,
+                        ),
+                        const SizedBox(height: 16),
+                        _ProfileInfoTile(
+                          icon: Icons.cake_outlined,
+                          title: 'Date of Birth',
+                          subtitle: userProfile.dateOfBirth?.toLocal().toString().split(' ')[0] ?? 'Not specified',
+                          color: Colors.teal,
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 32),
-                    _buildGradientButton(
-                      text: 'Edit Profile',
-                      onPressed: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => const EditProfilePage(),
-                        ));
-                      },
+                  ),
+                  const SizedBox(height: 24),
+                  _buildGlassCard(
+                    isLight: isLight,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Physical Attributes', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 20),
+                        _ProfileInfoTile(
+                          icon: Icons.height,
+                          title: 'Height',
+                          subtitle: userProfile.heightCm != null ? '${userProfile.heightCm!.toStringAsFixed(1)} cm' : 'Not specified',
+                          color: Colors.blueAccent,
+                        ),
+                        const SizedBox(height: 16),
+                        _ProfileInfoTile(
+                          icon: Icons.fitness_center,
+                          title: 'Weight',
+                          subtitle: userProfile.weightKg != null ? '${userProfile.weightKg!.toStringAsFixed(1)} kg' : 'Not specified',
+                          color: Colors.redAccent,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 32),
+                  _buildGradientButton(
+                    text: 'Edit Profile',
+                    onPressed: () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => const EditProfilePage(),
+                      ));
+                    },
+                  ),
+                ],
               ),
             ),
           ),
@@ -194,16 +193,23 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildProfileInfoTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required ThemeData theme,
-  }) {
-    return ListTile(
-      leading: Icon(icon, color: theme.colorScheme.primary),
-      title: Text(title, style: theme.textTheme.bodySmall),
-      subtitle: Text(subtitle, style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
+  Widget _buildGlassCard({required Widget child, required bool isLight}) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.all(24.0),
+          decoration: BoxDecoration(
+            color: isLight ? Colors.white.withValues(alpha: 0.5) : Colors.black.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isLight ? Colors.white.withValues(alpha: 0.7) : Colors.grey.shade800,
+            ),
+          ),
+          child: child,
+        ),
+      ),
     );
   }
 
@@ -226,7 +232,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -249,6 +255,49 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ProfileInfoTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color color;
+
+  const _ProfileInfoTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color.withValues(alpha: 0.15),
+          ),
+          child: Icon(icon, color: color, size: 24),
+        ),
+        const SizedBox(width: 16),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

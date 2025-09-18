@@ -16,7 +16,6 @@ import 'package:khelpratibha/services/auth_service.dart';
 import 'package:khelpratibha/services/database_service.dart';
 import 'package:khelpratibha/services/storage_service.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
