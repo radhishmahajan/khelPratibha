@@ -4,14 +4,15 @@ import 'package:khelpratibha/api/supabase_client.dart';
 import 'package:khelpratibha/config/app_theme.dart';
 import 'package:khelpratibha/config/theme_notifier.dart';
 import 'package:khelpratibha/providers/achievement_provider.dart';
-import 'package:khelpratibha/providers/session_provider.dart';
+import 'package:khelpratibha/providers/challenge_provider.dart';
+import 'package:khelpratibha/providers/goal_provider.dart';
+import 'package:khelpratibha/providers/leaderboard_provider.dart';
+import 'package:khelpratibha/providers/performance_provider.dart';
 import 'package:khelpratibha/providers/user_provider.dart';
 import 'package:khelpratibha/screens/core/splash_screen.dart';
-import 'package:khelpratibha/services/analysis_service.dart';
 import 'package:khelpratibha/services/auth_service.dart';
 import 'package:khelpratibha/services/database_service.dart';
 import 'package:khelpratibha/services/storage_service.dart';
-import 'package:khelpratibha/services/news_service.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
@@ -19,15 +20,12 @@ void main() async {
   await dotenv.load(fileName: ".env");
   await SupabaseClientManager.initialize();
   runApp(
-    // All providers are now at the top level of the app, protecting them from rebuilds.
     MultiProvider(
       providers: [
         // Core Services that don't change
         Provider<AuthService>(create: (_) => AuthService()),
         Provider<DatabaseService>(create: (_) => DatabaseService()),
         Provider<StorageService>(create: (_) => StorageService()),
-        Provider<AnalysisService>(create: (_) => AnalysisService()),
-        Provider<NewsService>(create: (_) => NewsService()),
 
         // UI State Notifier
         ChangeNotifierProvider(create: (_) => ThemeNotifier()),
@@ -37,13 +35,25 @@ void main() async {
           create: (context) => UserProvider(context.read<DatabaseService>()),
           update: (context, dbService, previous) => previous ?? UserProvider(dbService),
         ),
-        ChangeNotifierProxyProvider<DatabaseService, SessionProvider>(
-          create: (context) => SessionProvider(context.read<DatabaseService>()),
-          update: (context, dbService, previous) => previous ?? SessionProvider(dbService),
-        ),
         ChangeNotifierProxyProvider<DatabaseService, AchievementProvider>(
           create: (context) => AchievementProvider(context.read<DatabaseService>()),
           update: (context, dbService, previous) => previous ?? AchievementProvider(dbService),
+        ),
+        ChangeNotifierProxyProvider<DatabaseService, GoalProvider>(
+          create: (context) => GoalProvider(context.read<DatabaseService>()),
+          update: (context, dbService, previous) => previous ?? GoalProvider(dbService),
+        ),
+        ChangeNotifierProxyProvider<DatabaseService, LeaderboardProvider>(
+          create: (context) => LeaderboardProvider(context.read<DatabaseService>()),
+          update: (context, dbService, previous) => previous ?? LeaderboardProvider(dbService),
+        ),
+        ChangeNotifierProxyProvider<DatabaseService, PerformanceProvider>(
+          create: (context) => PerformanceProvider(context.read<DatabaseService>()),
+          update: (context, dbService, previous) => previous ?? PerformanceProvider(dbService),
+        ),
+        ChangeNotifierProxyProvider<DatabaseService, ChallengeProvider>(
+          create: (context) => ChallengeProvider(context.read<DatabaseService>()),
+          update: (context, dbService, previous) => previous ?? ChallengeProvider(dbService),
         ),
       ],
       child: const MyApp(),

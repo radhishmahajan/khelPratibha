@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:khelpratibha/models/achievement.dart';
-import 'package:khelpratibha/models/performance_session.dart';
 import 'package:khelpratibha/services/database_service.dart';
 
 class AchievementProvider extends ChangeNotifier {
@@ -24,7 +23,7 @@ class AchievementProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> checkAndUnlockAchievements(List<PerformanceSession> sessions, String currentLevel) async {
+  Future<void> checkAndUnlockAchievements(int pushupReps, int situpReps) async {
     final unlockedKeys =
     _achievements.where((a) => a.isUnlocked).map((a) => a.key).toSet();
 
@@ -37,25 +36,13 @@ class AchievementProvider extends ChangeNotifier {
     }
 
     // --- Achievement Logic ---
-    if (sessions.isNotEmpty) {
-      await unlock('first_session');
-    }
-    if (sessions.length >= 5) {
-      await unlock('video_virtuoso');
-    }
-    if (sessions.length >= 10) {
-      await unlock('consistent_performer');
-    }
-    if (sessions.any((s) => s.score >= 85)) {
-      await unlock('high_scorer');
-    }
-    if (currentLevel.toLowerCase() == 'advanced') {
-      await unlock('top_tier');
-    }
+    await unlock('first_strength_test');
 
-    final sessionsThisWeek = sessions.where((s) => s.createdAt.isAfter(DateTime.now().subtract(const Duration(days: 7))));
-    if (sessionsThisWeek.length >= 3) {
-      await unlock('weekly_warrior');
+    if (pushupReps >= 50) {
+      await unlock('pushup_pro');
+    }
+    if (situpReps >= 100) {
+      await unlock('situp_star');
     }
 
     await fetchAchievements();

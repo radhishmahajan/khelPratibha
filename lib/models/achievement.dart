@@ -24,20 +24,10 @@ class Achievement {
   // Helper function to get an IconData from a string name
   static IconData _getIconData(String iconName) {
     switch (iconName) {
-      case 'flag':
-        return Icons.flag;
-      case 'calendar_today':
-        return Icons.calendar_today;
-      case 'star':
-        return Icons.star;
-      case 'repeat':
-        return Icons.repeat;
-      case 'military_tech':
-        return Icons.military_tech;
-      case 'videocam':
-        return Icons.videocam;
+      case 'fitness_center':
+        return Icons.fitness_center;
       default:
-        return Icons.help_outline;
+        return Icons.emoji_events;
     }
   }
 

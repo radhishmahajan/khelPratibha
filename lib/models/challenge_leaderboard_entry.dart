@@ -1,24 +1,24 @@
-class LeaderboardEntry {
+class ChallengeLeaderboardEntry {
   final String userId;
   final String fullName;
   final String? avatarUrl;
-  final double totalScore;
+  final double progress;
   final int rank;
 
-  LeaderboardEntry({
+  ChallengeLeaderboardEntry({
     required this.userId,
     required this.fullName,
     this.avatarUrl,
-    required this.totalScore,
+    required this.progress,
     required this.rank,
   });
 
-  factory LeaderboardEntry.fromMap(Map<String, dynamic> map, int rank) {
-    return LeaderboardEntry(
+  factory ChallengeLeaderboardEntry.fromMap(Map<String, dynamic> map, int rank) {
+    return ChallengeLeaderboardEntry(
       userId: map['user_id'],
       fullName: map['full_name'] ?? 'Anonymous Athlete',
       avatarUrl: map['avatar_url'],
-      totalScore: (map['total_score'] as num).toDouble(),
+      progress: (map['progress'] as num).toDouble(),
       rank: rank,
     );
   }

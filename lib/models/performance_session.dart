@@ -1,28 +1,25 @@
 class PerformanceSession {
   final String id;
-  final String userId;
-  final String programId;
+  final String testName;
   final double score;
-  final String feedback;
-  final DateTime createdAt;
+  final int? reps;
+  final DateTime recordedAt;
 
   PerformanceSession({
     required this.id,
-    required this.userId,
-    required this.programId,
+    required this.testName,
     required this.score,
-    required this.feedback,
-    required this.createdAt,
+    this.reps,
+    required this.recordedAt,
   });
 
   factory PerformanceSession.fromMap(Map<String, dynamic> map) {
     return PerformanceSession(
       id: map['id'],
-      userId: map['user_id'],
-      programId: map['program_id'],
+      testName: map['fitness_tests']['name'] ?? 'Unknown Test',
       score: (map['score'] as num).toDouble(),
-      feedback: map['feedback'] ?? '',
-      createdAt: DateTime.parse(map['created_at']),
+      reps: map['reps'],
+      recordedAt: DateTime.parse(map['recorded_at']),
     );
   }
 }

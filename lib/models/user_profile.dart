@@ -1,4 +1,3 @@
-import 'package:khelpratibha/models/sport_category.dart';
 import 'package:khelpratibha/models/user_role.dart';
 
 class UserProfile {
@@ -9,7 +8,6 @@ class UserProfile {
   final String? avatarUrl;
   final DateTime? dateOfBirth;
   final String? sport;
-  final SportCategory? selectedCategory;
   final double? heightCm;
   final double? weightKg;
   final Map<String, dynamic>? personalBests;
@@ -22,7 +20,6 @@ class UserProfile {
     this.avatarUrl,
     this.dateOfBirth,
     this.sport,
-    this.selectedCategory,
     this.heightCm,
     this.weightKg,
     this.personalBests,
@@ -39,7 +36,6 @@ class UserProfile {
           ? DateTime.tryParse(map['date_of_birth'])
           : null,
       sport: map['sport'],
-      selectedCategory: sportCategoryFromString(map['selected_category']),
       heightCm: (map['height_cm'] as num?)?.toDouble(),
       weightKg: (map['weight_kg'] as num?)?.toDouble(),
       personalBests: map['personal_bests'] != null
@@ -57,7 +53,6 @@ class UserProfile {
       'avatar_url': avatarUrl,
       'date_of_birth': dateOfBirth?.toIso8601String(),
       'sport': sport,
-      'selected_category': selectedCategory?.name,
       'updated_at': DateTime.now().toIso8601String(),
       'height_cm': heightCm,
       'weight_kg': weightKg,
@@ -73,7 +68,6 @@ class UserProfile {
     String? avatarUrl,
     DateTime? dateOfBirth,
     String? sport,
-    SportCategory? selectedCategory,
     double? heightCm,
     double? weightKg,
     Map<String, dynamic>? personalBests,
@@ -86,7 +80,6 @@ class UserProfile {
       avatarUrl: avatarUrl ?? this.avatarUrl,
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       sport: sport ?? this.sport,
-      selectedCategory: selectedCategory ?? this.selectedCategory,
       heightCm: heightCm ?? this.heightCm,
       weightKg: weightKg ?? this.weightKg,
       personalBests: personalBests ?? this.personalBests,

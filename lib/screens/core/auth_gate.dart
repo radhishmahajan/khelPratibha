@@ -3,9 +3,9 @@ import 'package:khelpratibha/models/user_role.dart';
 import 'package:khelpratibha/providers/user_provider.dart';
 import 'package:khelpratibha/screens/auth/login_page.dart';
 import 'package:khelpratibha/screens/core/role_selection_page.dart';
-import 'package:khelpratibha/screens/core/selection_home_page.dart';
+import 'package:khelpratibha/screens/dashboard/player/player_dashboard.dart';
+import 'package:khelpratibha/screens/dashboard/scout/scout_dashboard.dart';
 import 'package:khelpratibha/services/auth_service.dart';
-import 'package:khelpratibha/utils/navigation_helper.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -32,7 +32,6 @@ class AuthGate extends StatelessWidget {
                 });
               }
 
-              // Show a loading screen while the profile is being fetched
               if (userProvider.isLoading || userProvider.userProfile == null) {
                 return const Scaffold(
                     body: Center(child: CircularProgressIndicator()));
@@ -44,16 +43,9 @@ class AuthGate extends StatelessWidget {
               if (userProfile.role == UserRole.unknown) {
                 return const RoleSelectionPage();
               } else if (userProfile.role == UserRole.scout) {
-                return const SelectionHomePage();
+                return const ScoutDashboard();
               } else if (userProfile.role == UserRole.player) {
-                if (userProfile.selectedCategory != null) {
-                  return NavigationHelper.getDashboardFromRole(
-                    userProfile.role,
-                    userProfile.selectedCategory!,
-                  );
-                } else {
-                  return const SelectionHomePage();
-                }
+                return const PlayerDashboard();
               }
               // Fallback to login page if something is wrong
               return const LoginPage();

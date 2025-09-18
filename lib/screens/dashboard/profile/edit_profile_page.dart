@@ -2,8 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:khelpratibha/config/theme_notifier.dart';
-import 'package:khelpratibha/models/sport_category.dart';
-import 'package:khelpratibha/models/user_role.dart';
 import 'package:khelpratibha/providers/user_provider.dart';
 import 'package:khelpratibha/screens/core/auth_gate.dart';
 import 'package:khelpratibha/services/database_service.dart';
@@ -23,11 +21,8 @@ class _EditProfilePageState extends State<EditProfilePage> with SingleTickerProv
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _fullNameController;
   late TextEditingController _sportController;
-  late TextEditingController _heightController;
-  late TextEditingController _weightController;
   DateTime? _dateOfBirth;
   XFile? _selectedImage;
-  SportCategory? _selectedCategory;
   bool _isLoading = false;
 
   late AnimationController _animationController;
@@ -41,9 +36,6 @@ class _EditProfilePageState extends State<EditProfilePage> with SingleTickerProv
     _fullNameController = TextEditingController(text: userProfile?.fullName);
     _sportController = TextEditingController(text: userProfile?.sport);
     _dateOfBirth = userProfile?.dateOfBirth;
-    _selectedCategory = userProfile?.selectedCategory;
-    _heightController = TextEditingController(text: userProfile?.heightCm?.toString());
-    _weightController = TextEditingController(text: userProfile?.weightKg?.toString());
 
     _animationController = AnimationController(
       vsync: this,
@@ -65,8 +57,6 @@ class _EditProfilePageState extends State<EditProfilePage> with SingleTickerProv
   void dispose() {
     _fullNameController.dispose();
     _sportController.dispose();
-    _heightController.dispose();
-    _weightController.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -110,9 +100,6 @@ class _EditProfilePageState extends State<EditProfilePage> with SingleTickerProv
         avatarUrl: avatarUrl,
         sport: _sportController.text.trim(),
         dateOfBirth: _dateOfBirth,
-        selectedCategory: _selectedCategory,
-        heightCm: double.tryParse(_heightController.text),
-        weightKg: double.tryParse(_weightController.text),
       );
 
       await dbService.upsertUserProfile(updatedProfile);
@@ -227,18 +214,10 @@ class _EditProfilePageState extends State<EditProfilePage> with SingleTickerProv
                             ),
                           ),
                           const SizedBox(height: 16),
-                          CustomInputField(
-                            controller: _heightController,
-                            labelText: 'Height (m)',
-                            prefixIcon: Icons.height,
-                            keyboardType: TextInputType.number,
-                          ),
-                          const SizedBox(height: 16),
-                          CustomInputField(
-                            controller: _weightController,
-                            labelText: 'Weight (kg)',
-                            prefixIcon: Icons.fitness_center,
-                            keyboardType: TextInputType.number,
+                          ListTile(
+                            leading: const Icon(Icons.info_outline),
+                            title: const Text('Height and Weight'),
+                            subtitle: const Text('These are updated via the fitness tests.'),
                           ),
                         ],
                       ),
@@ -257,26 +236,6 @@ class _EditProfilePageState extends State<EditProfilePage> with SingleTickerProv
                             prefixIcon: Icons.sports_soccer_outlined,
                           ),
                           const SizedBox(height: 16),
-                          if (userProfile?.role == UserRole.player)
-                            DropdownButtonFormField<SportCategory>(
-                              value: _selectedCategory,
-                              decoration: InputDecoration(
-                                labelText: 'Sport Category',
-                                prefixIcon: const Icon(Icons.category_outlined),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                              items: SportCategory.values.map((SportCategory category) {
-                                return DropdownMenuItem<SportCategory>(
-                                  value: category,
-                                  child: Text(category.name[0].toUpperCase() + category.name.substring(1)),
-                                );
-                              }).toList(),
-                              onChanged: (SportCategory? newValue) {
-                                setState(() {
-                                  _selectedCategory = newValue;
-                                });
-                              },
-                            ),
                         ],
                       ),
                     ),
@@ -305,10 +264,10 @@ class _EditProfilePageState extends State<EditProfilePage> with SingleTickerProv
         child: Container(
           padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
-            color: isLight ? Colors.white.withValues(alpha: 0.5) : Colors.black.withValues(alpha: 0.3),
+            color: isLight ? Colors.white.withOpacity(0.5) : Colors.black.withOpacity(0.3),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: isLight ? Colors.white.withValues(alpha: 0.7) : Colors.grey.shade800,
+              color: isLight ? Colors.white.withOpacity(0.7) : Colors.grey.shade800,
             ),
           ),
           child: child,
@@ -333,7 +292,7 @@ class _EditProfilePageState extends State<EditProfilePage> with SingleTickerProv
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
+              color: Colors.black.withOpacity(0.15),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),

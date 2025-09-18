@@ -1,9 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:khelpratibha/config/theme_notifier.dart';
-import 'package:khelpratibha/models/user_role.dart';
-import 'package:khelpratibha/providers/achievement_provider.dart';
-import 'package:khelpratibha/providers/session_provider.dart';
 import 'package:khelpratibha/providers/user_provider.dart';
 import 'package:khelpratibha/screens/core/auth_gate.dart';
 import 'package:khelpratibha/screens/dashboard/profile/edit_profile_page.dart';
@@ -51,18 +48,10 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   @override
   Widget build(BuildContext context) {
     final userProvider = context.watch<UserProvider>();
-    final sessionProvider = context.watch<SessionProvider>();
-    final achievementProvider = context.watch<AchievementProvider>();
     final userProfile = userProvider.userProfile;
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     final isLight = themeNotifier.themeMode == ThemeMode.light;
     final theme = Theme.of(context);
-
-    final totalSessions = sessionProvider.sessions.length;
-    final achievementsUnlocked = achievementProvider.achievements.where((a) => a.isUnlocked).length;
-    final averageScore = sessionProvider.sessions.isEmpty
-        ? 0.0
-        : sessionProvider.sessions.map((s) => s.score).reduce((a, b) => a + b) / totalSessions;
 
     return SafeArea(
       child: Scaffold(
@@ -133,26 +122,16 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 32),
-                    Row(
-                      children: [
-                        Expanded(child: _buildStatCard('Sessions', totalSessions.toString(), Icons.analytics_outlined, Colors.blueAccent)),
-                        const SizedBox(width: 16),
-                        Expanded(child: _buildStatCard('Achievements', achievementsUnlocked.toString(), Icons.emoji_events_outlined, Colors.amber)),
-                        const SizedBox(width: 16),
-                        Expanded(child: _buildStatCard('Avg. Score', averageScore.toStringAsFixed(1), Icons.star_border, Colors.pinkAccent)),
-                      ],
-                    ),
-                    const SizedBox(height: 32),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(24),
                       child: BackdropFilter(
                         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: isLight ? Colors.white.withValues(alpha: 0.5) : Colors.black.withValues(alpha: 0.3),
+                            color: isLight ? Colors.white.withOpacity(0.5) : Colors.black.withOpacity(0.3),
                             borderRadius: BorderRadius.circular(24),
                             border: Border.all(
-                              color: isLight ? Colors.white.withValues(alpha: 0.7) : Colors.grey.shade800,
+                              color: isLight ? Colors.white.withOpacity(0.7) : Colors.grey.shade800,
                             ),
                           ),
                           child: Column(
@@ -177,15 +156,20 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                                 subtitle: userProfile.dateOfBirth?.toLocal().toString().split(' ')[0] ?? 'Not specified',
                                 theme: theme,
                               ),
-                              if (userProfile.role == UserRole.player && userProfile.selectedCategory != null) ...[
-                                const Divider(height: 1),
-                                _buildProfileInfoTile(
-                                  icon: Icons.category_outlined,
-                                  title: 'Sport Category',
-                                  subtitle: userProfile.selectedCategory!.name[0].toUpperCase() + userProfile.selectedCategory!.name.substring(1),
-                                  theme: theme,
-                                ),
-                              ]
+                              const Divider(height: 1),
+                              _buildProfileInfoTile(
+                                icon: Icons.height,
+                                title: 'Height',
+                                subtitle: userProfile.heightCm != null ? '${userProfile.heightCm!.toStringAsFixed(1)} cm' : 'Not specified',
+                                theme: theme,
+                              ),
+                              const Divider(height: 1),
+                              _buildProfileInfoTile(
+                                icon: Icons.fitness_center,
+                                title: 'Weight',
+                                subtitle: userProfile.weightKg != null ? '${userProfile.weightKg!.toStringAsFixed(1)} kg' : 'Not specified',
+                                theme: theme,
+                              ),
                             ],
                           ),
                         ),
@@ -204,43 +188,6 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                 ),
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
-    final theme = Theme.of(context);
-    final isLight = theme.brightness == Brightness.light;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isLight ? Colors.white.withValues(alpha: 0.5) : Colors.black.withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: isLight ? Colors.white.withValues(alpha: 0.7) : Colors.grey.shade800,
-            ),
-          ),
-          child: Column(
-            children: [
-              Icon(icon, size: 28, color: color),
-              const SizedBox(height: 8),
-              Text(
-                value,
-                style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                title,
-                style: theme.textTheme.bodySmall,
-                textAlign: TextAlign.center,
-              ),
-            ],
           ),
         ),
       ),
@@ -279,7 +226,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
+              color: Colors.black.withOpacity(0.15),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
