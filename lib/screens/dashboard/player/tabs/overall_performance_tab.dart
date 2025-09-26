@@ -42,7 +42,7 @@ class _OverallPerformanceTabState extends State<OverallPerformanceTab> {
     }
 
     final selectedHistory = _selectedCategory != null
-        ? categorySpecificHistory[_selectedCategory!]
+        ? categorySpecificHistory[_selectedCategory!] ?? [] // If lookup is null, use an empty list
         : performanceHistory;
 
     final Map<DateTime, double> dailyScores = {};
