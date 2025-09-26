@@ -12,6 +12,11 @@ class AchievementProvider extends ChangeNotifier {
   List<Achievement> get achievements => _achievements;
   bool get isLoading => _isLoading;
 
+  void clearData() {
+    _achievements = [];
+    notifyListeners();
+  }
+
   Future<void> fetchAchievements() async {
     _isLoading = true;
     notifyListeners();

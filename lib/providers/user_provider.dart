@@ -44,7 +44,7 @@ class UserProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void clearUserProfile() {
+  void clearData() {
     _userProfile = null;
     notifyListeners();
   }

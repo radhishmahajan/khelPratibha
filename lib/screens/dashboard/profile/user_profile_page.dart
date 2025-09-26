@@ -7,6 +7,11 @@ import 'package:khelpratibha/screens/dashboard/profile/edit_profile_page.dart';
 import 'package:khelpratibha/services/auth_service.dart';
 import 'package:khelpratibha/widgets/profile_avatar.dart';
 import 'package:provider/provider.dart';
+import 'package:khelpratibha/providers/achievement_provider.dart'; // Add
+import 'package:khelpratibha/providers/challenge_provider.dart'; // Add
+import 'package:khelpratibha/providers/goal_provider.dart'; // Add
+import 'package:khelpratibha/providers/leaderboard_provider.dart'; // Add
+import 'package:khelpratibha/providers/performance_provider.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -45,6 +50,28 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     super.dispose();
   }
 
+  Future<void> _signOut() async {
+    // Clear all user-specific data from providers
+    context.read<UserProvider>().clearData();
+    context.read<PerformanceProvider>().clearData();
+    context.read<LeaderboardProvider>().clearData();
+    context.read<ChallengeProvider>().clearData();
+    context.read<AchievementProvider>().clearData();
+    context.read<GoalProvider>().clearData();
+
+    // Sign out from the auth service
+    await context.read<AuthService>().signOut();
+
+    // Navigate to the AuthGate, which will show the LoginPage
+    if (mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const AuthGate()),
+            (route) => false,
+      );
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final userProvider = context.watch<UserProvider>();
@@ -63,15 +90,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
           IconButton(
             tooltip: 'Sign Out',
             icon: Icon(Icons.logout, color: isLight? Colors.black : Colors.white,),
-            onPressed: () async {
-              await context.read<AuthService>().signOut();
-              if (context.mounted) {
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (context) => const AuthGate()),
-                      (route) => false,
-                );
-              }
-            },
+            onPressed: _signOut,
           ),
         ],
       ),

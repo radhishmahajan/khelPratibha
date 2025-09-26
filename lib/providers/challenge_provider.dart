@@ -16,6 +16,12 @@ class ChallengeProvider extends ChangeNotifier {
   List<Challenge> get joinedChallenges => _joinedChallenges;
   bool get isLoading => _isLoading;
 
+  void clearData() {
+    _availableChallenges = [];
+    _joinedChallenges = [];
+    notifyListeners();
+  }
+
   Future<void> fetchChallenges() async {
     _isLoading = true;
     notifyListeners();

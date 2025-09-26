@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:khelpratibha/models/performance_session.dart';
@@ -9,6 +10,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
+enum TimeFrame { day, week, month }
+
 class OverallPerformanceTab extends StatefulWidget {
   const OverallPerformanceTab({super.key});
 
@@ -18,6 +21,7 @@ class OverallPerformanceTab extends StatefulWidget {
 
 class _OverallPerformanceTabState extends State<OverallPerformanceTab> {
   String? _selectedCategory;
+  TimeFrame _selectedTimeFrame = TimeFrame.week;
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +31,6 @@ class _OverallPerformanceTabState extends State<OverallPerformanceTab> {
     final theme = Theme.of(context);
     final isLight = theme.brightness == Brightness.light;
 
-    // Group performance history by test name
     final Map<String, List<PerformanceSession>> categorySpecificHistory = {};
     for (var session in performanceHistory) {
       if (!categorySpecificHistory.containsKey(session.testName)) {
@@ -36,24 +39,23 @@ class _OverallPerformanceTabState extends State<OverallPerformanceTab> {
       categorySpecificHistory[session.testName]!.add(session);
     }
 
-    final categories = categorySpecificHistory.keys.toList();
+    final categories = categorySpecificHistory.keys.toSet().toList();
     if (_selectedCategory == null && categories.isNotEmpty) {
       _selectedCategory = categories.first;
+    } else if (_selectedCategory != null &&
+        !categories.contains(_selectedCategory)) {
+      _selectedCategory = categories.isNotEmpty ? categories.first : null;
     }
 
     final selectedHistory = _selectedCategory != null
-        ? categorySpecificHistory[_selectedCategory!] ?? [] // If lookup is null, use an empty list
+        ? categorySpecificHistory[_selectedCategory!] ?? []
         : performanceHistory;
 
-    final Map<DateTime, double> dailyScores = {};
-    for (var session in selectedHistory!) {
-      final day = DateTime(
-          session.recordedAt.year, session.recordedAt.month, session.recordedAt.day);
-      dailyScores[day] = (dailyScores[day] ?? 0) + session.score;
-    }
+    final Map<DateTime, double> aggregatedScores =
+    _aggregateScores(selectedHistory);
 
-    final sortedDailyScores = dailyScores.entries.toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
+    final List<MapEntry<DateTime, double>> chartData =
+    _prepareChartData(aggregatedScores, _selectedTimeFrame);
 
     return performanceProvider.isLoading
         ? const Center(child: CircularProgressIndicator())
@@ -66,46 +68,7 @@ class _OverallPerformanceTabState extends State<OverallPerformanceTab> {
             style: theme.textTheme.headlineSmall
                 ?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 18),
-        // ENHANCED DROPDOWN
-        ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              decoration: BoxDecoration(
-                color: isLight
-                    ? Colors.white.withValues(alpha: 0.5)
-                    : Colors.black.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isLight
-                      ? Colors.white.withValues(alpha: 0.7)
-                      : Colors.grey.shade800,
-                ),
-              ),
-              child: DropdownButton<String>(
-                value: _selectedCategory,
-                hint: const Text("Select a Category"),
-                isExpanded: true,
-                underline: const SizedBox.shrink(),
-                icon: Icon(Icons.arrow_drop_down_rounded, color: theme.colorScheme.primary),
-                dropdownColor: isLight ? Colors.white.withValues(alpha: 0.8) : Colors.black.withValues(alpha: 0.7),
-                items: categories
-                    .map((category) => DropdownMenuItem(
-                  value: category,
-                  child: Text(category, style: theme.textTheme.bodyLarge),
-                ))
-                    .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedCategory = value;
-                  });
-                },
-              ),
-            ),
-          ),
-        ),
+        _buildDropdown(theme, isLight, categories),
         const SizedBox(height: 18),
         Row(
           children: [
@@ -135,19 +98,50 @@ class _OverallPerformanceTabState extends State<OverallPerformanceTab> {
           ],
         ),
         const SizedBox(height: 22),
-        Text('Performance Trend',
-            style: theme.textTheme.headlineSmall
-                ?.copyWith(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 300,
-          child: sortedDailyScores.isEmpty
-              ? const _EmptyTrendPlaceholder()
-              : sortedDailyScores.length == 1
-              ? _SingleDayChart(dailyData: sortedDailyScores)
-              : _MultiDayLineChart(dailyData: sortedDailyScores),
+        Container(
+          padding: const EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            color: isLight ? Colors.white : theme.colorScheme.surfaceContainer,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Performance Trend',
+                  style: theme.textTheme.headlineSmall
+                      ?.copyWith(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              _buildTimeFrameSelector(theme),
+              const SizedBox(height: 16),
+
+              // Chart Title (e.g., "September 2025")
+              Center(
+                child: Text(
+                  _getChartTitle(),
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                ),
+              ),
+
+              SizedBox(
+                height: 300,
+                child: chartData.isEmpty
+                    ? const _EmptyTrendPlaceholder()
+                    : _MultiDayLineChart(
+                  dailyData: chartData,
+                  timeFrame: _selectedTimeFrame,
+                ),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 22),
         Text('Progress Tracking',
             style: theme.textTheme.headlineSmall
                 ?.copyWith(fontWeight: FontWeight.bold)),
@@ -157,7 +151,8 @@ class _OverallPerformanceTabState extends State<OverallPerformanceTab> {
           final sessions = entry.value;
           sessions.sort((a, b) => b.recordedAt.compareTo(a.recordedAt));
           final latestSession = sessions.first;
-          final previousBestSession = sessions.length > 1 ? sessions[1] : null;
+          final previousBestSession =
+          sessions.length > 1 ? sessions[1] : null;
 
           return GestureDetector(
             onTap: () {
@@ -197,7 +192,329 @@ class _OverallPerformanceTabState extends State<OverallPerformanceTab> {
       ],
     );
   }
+
+  String _getChartTitle() {
+    final now = DateTime.now();
+    switch (_selectedTimeFrame) {
+      case TimeFrame.day:
+        return 'This Week';
+      case TimeFrame.week:
+        return DateFormat.yMMMM().format(now); // "September 2025"
+      case TimeFrame.month:
+        return DateFormat.y().format(now); // "2025"
+    }
+  }
+
+  Map<DateTime, double> _aggregateScores(List<PerformanceSession> sessions) {
+    final Map<DateTime, double> dailyScores = {};
+    for (var session in sessions) {
+      final day = DateTime(
+          session.recordedAt.year, session.recordedAt.month, session.recordedAt.day);
+      dailyScores[day] = (dailyScores[day] ?? 0) + session.score;
+    }
+    return dailyScores;
+  }
+
+  List<MapEntry<DateTime, double>> _prepareChartData(
+      Map<DateTime, double> aggregatedScores, TimeFrame timeFrame) {
+    final now = DateTime.now();
+    final Map<DateTime, double> filledData = {};
+
+    switch (timeFrame) {
+      case TimeFrame.day:
+        final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+        for (int i = 0; i < 7; i++) {
+          final day = DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day + i);
+          filledData[day] = aggregatedScores[day] ?? 0;
+        }
+        break;
+      case TimeFrame.week:
+        final firstDayOfMonth = DateTime(now.year, now.month, 1);
+        for (int i = 0; i < 4; i++) {
+          final weekStart = firstDayOfMonth.add(Duration(days: i * 7));
+          if (weekStart.month != now.month) continue;
+
+          final weekEnd = weekStart.add(const Duration(days: 6));
+          double weekTotal = 0;
+
+          aggregatedScores.forEach((day, score) {
+            if (!day.isBefore(weekStart) && !day.isAfter(weekEnd)) {
+              weekTotal += score;
+            }
+          });
+          filledData[weekStart] = weekTotal;
+        }
+        break;
+      case TimeFrame.month:
+        for (int i = 1; i <= 12; i++) {
+          final month = DateTime(now.year, i, 1);
+          double monthTotal = 0;
+          aggregatedScores.forEach((day, score) {
+            if (day.year == month.year && day.month == month.month) {
+              monthTotal += score;
+            }
+          });
+          filledData[month] = monthTotal;
+        }
+        break;
+    }
+    return filledData.entries.toList();
+  }
+
+  Widget _buildTimeFrameSelector(ThemeData theme) {
+    return Center(
+      child: ToggleButtons(
+        isSelected: [
+          _selectedTimeFrame == TimeFrame.day,
+          _selectedTimeFrame == TimeFrame.week,
+          _selectedTimeFrame == TimeFrame.month,
+        ],
+        onPressed: (index) {
+          setState(() {
+            _selectedTimeFrame = TimeFrame.values[index];
+          });
+        },
+        borderRadius: BorderRadius.circular(12),
+        selectedColor: Colors.white,
+        fillColor: theme.colorScheme.primary,
+        children: const [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Text('Day'),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Text('Week'),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Text('Month'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDropdown(ThemeData theme, bool isLight, List<String> categories) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          decoration: BoxDecoration(
+            color: isLight
+                ? Colors.white.withValues(alpha: 0.5)
+                : Colors.black.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isLight
+                  ? Colors.white.withValues(alpha: 0.7)
+                  : Colors.grey.shade800,
+            ),
+          ),
+          child: DropdownButton<String>(
+            value: _selectedCategory,
+            hint: const Text("Select a Category"),
+            isExpanded: true,
+            underline: const SizedBox.shrink(),
+            icon: Icon(Icons.arrow_drop_down_rounded,
+                color: theme.colorScheme.primary),
+            dropdownColor: isLight
+                ? Colors.white.withValues(alpha: 0.8)
+                : Colors.black.withValues(alpha: 0.7),
+            items: categories
+                .map((category) => DropdownMenuItem(
+              value: category,
+              child: Text(category, style: theme.textTheme.bodyLarge),
+            ))
+                .toList(),
+            onChanged: (value) {
+              setState(() {
+                _selectedCategory = value;
+              });
+            },
+          ),
+        ),
+      ),
+    );
+  }
 }
+
+class _MultiDayLineChart extends StatelessWidget {
+  final List<MapEntry<DateTime, double>> dailyData;
+  final TimeFrame timeFrame;
+
+  const _MultiDayLineChart({required this.dailyData, required this.timeFrame});
+
+  double _getRoundedMaxY(double maxScore) {
+    if (maxScore <= 10) return 10;
+    final paddedMax = maxScore * 1.15;
+    final numDigits = paddedMax.floor().toString().length;
+    final roundingFactor = pow(10, numDigits - (numDigits > 2 ? 2 : 1));
+    return ((paddedMax / roundingFactor).ceil() * roundingFactor).toDouble();
+  }
+
+  LineTouchData _buildLineTouchData(BuildContext context) {
+    final theme = Theme.of(context);
+    final isLight = theme.brightness == Brightness.light;
+
+    return LineTouchData(
+      handleBuiltInTouches: true,
+      touchTooltipData: LineTouchTooltipData(
+        getTooltipItems: (List<LineBarSpot> touchedSpots) {
+          return touchedSpots.map((spot) {
+            final index = spot.spotIndex;
+            if (index < 0 || index >= dailyData.length) return null;
+
+            final date = dailyData[index].key;
+            final score = dailyData[index].value;
+
+            final dayText = DateFormat('E').format(date);
+            final scoreText = 'Score: ${score.toStringAsFixed(0)}';
+
+            return LineTooltipItem(
+              '$dayText\n$scoreText',
+              TextStyle(
+                color: theme.colorScheme.onPrimary,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            );
+          }).toList();
+        },
+      ),
+      getTouchedSpotIndicator: (LineChartBarData barData,
+          List<int> spotIndexes) {
+        return spotIndexes.map((spotIndex) {
+          return TouchedSpotIndicatorData(
+            FlLine(
+              color: isLight
+                  ? Colors.blueAccent.withValues(alpha: 0.5)
+                  : Colors.tealAccent.withValues(alpha: 0.6),
+              strokeWidth: 2,
+            ),
+            FlDotData(
+              getDotPainter: (spot, percent, barData, index) {
+                return FlDotCirclePainter(
+                  radius: 6.0,
+                  color: isLight ? Colors.blueAccent : Colors.tealAccent,
+                  strokeWidth: 2,
+                  strokeColor: isLight ? Colors.white : Colors.black,
+                );
+              },
+            ),
+          );
+        }).toList();
+      },
+    );
+  }
+
+    @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final spots = dailyData
+        .asMap()
+        .entries
+        .map((entry) => FlSpot(entry.key.toDouble(), entry.value.value))
+        .toList();
+
+    final double maxScore =
+    dailyData.map((e) => e.value).fold(0.0, (p, n) => n > p ? n : p);
+    final double maxY = _getRoundedMaxY(maxScore);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8),
+      child: LineChart(
+        LineChartData(
+          lineTouchData: _buildLineTouchData(context),
+          gridData: const FlGridData(show: false),
+          titlesData: FlTitlesData(
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 40,
+                interval: maxY > 0 ? maxY / 4 : 2.5,
+                getTitlesWidget: (value, meta) {
+                  if (value == meta.max) {
+                    return const SizedBox.shrink();
+                  }
+                  return Text(
+                    value.toInt().toString(),
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: theme.hintColor),
+                  );
+                },
+              ),
+            ),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 32,
+                interval: 1,
+                getTitlesWidget: (value, meta) {
+                  final index = value.toInt();
+                  if (index < 0 || index >= dailyData.length) {
+                    return const SizedBox.shrink();
+                  }
+                  final date = dailyData[index].key;
+                  String text;
+                  switch (timeFrame) {
+                    case TimeFrame.day:
+                      text = DateFormat('E').format(date);
+                      break;
+                    case TimeFrame.week:
+                      final weekOfMonth = (date.day / 7).ceil();
+                      text = 'W$weekOfMonth';
+                      break;
+                    case TimeFrame.month:
+                      text = DateFormat('MMM').format(date);
+                      break;
+                  }
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      text,
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(color: theme.hintColor),
+                    ),
+                  );
+                },
+              ),
+            ),
+            topTitles:
+            const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles:
+            const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          ),
+          minY: 0,
+          maxY: maxY,
+          borderData: FlBorderData(show: false),
+          lineBarsData: [
+            LineChartBarData(
+              spots: spots,
+              isCurved: true,
+              preventCurveOverShooting: true,
+              gradient: LinearGradient(
+                  colors: [theme.colorScheme.primary, theme.colorScheme.secondary]),
+              barWidth: 4,
+              isStrokeCapRound: true,
+              dotData: const FlDotData(show: true),
+              belowBarData: BarAreaData(
+                show: true,
+                gradient: LinearGradient(colors: [
+                  theme.colorScheme.primary.withOpacity(0.18),
+                  theme.colorScheme.secondary.withOpacity(0.02)
+                ]),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+// --- The following widgets remain unchanged ---
 
 class _PerformanceSummaryCard extends StatelessWidget {
   final String title;
@@ -282,154 +599,6 @@ class _EmptyTrendPlaceholder extends StatelessWidget {
   }
 }
 
-class _SingleDayChart extends StatelessWidget {
-  final List<MapEntry<DateTime, double>> dailyData;
-  const _SingleDayChart({required this.dailyData});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final date = dailyData.first.key;
-    final value = dailyData.first.value;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-      child: Column(
-        children: [
-          Expanded(
-            child: Center(
-              child: BarChart(
-                BarChartData(
-                  alignment: BarChartAlignment.center,
-                  gridData: const FlGridData(show: false),
-                  borderData: FlBorderData(show: false),
-                  titlesData: const FlTitlesData(show: false),
-                  barGroups: [
-                    BarChartGroupData(x: 0, barRods: [
-                      BarChartRodData(
-                        toY: value,
-                        width: 48,
-                        borderRadius: BorderRadius.circular(10),
-                        gradient: LinearGradient(
-                          colors: [
-                            theme.colorScheme.primary,
-                            theme.colorScheme.secondary
-                          ],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
-                        backDrawRodData: BackgroundBarChartRodData(
-                            show: true,
-                            toY: value * 1.1,
-                            color: Colors.transparent),
-                      )
-                    ])
-                  ],
-                  maxY: (value * 1.3).clamp(50.0, double.infinity),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(DateFormat.yMMMd().format(date),
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: theme.hintColor)),
-          const SizedBox(height: 6),
-          Text(value.toStringAsFixed(1),
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
-  }
-}
-
-class _MultiDayLineChart extends StatelessWidget {
-  final List<MapEntry<DateTime, double>> dailyData;
-  const _MultiDayLineChart({required this.dailyData});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final spots = dailyData
-        .map((e) => FlSpot(e.key.millisecondsSinceEpoch.toDouble(), e.value))
-        .toList();
-
-    final maxY = dailyData
-        .map((e) => e.value)
-        .fold<double>(0, (p, n) => n > p ? n : p) *
-        1.20; // Increased buffer to 20%
-
-    final minX = dailyData.first.key.millisecondsSinceEpoch.toDouble();
-    final maxX = dailyData.last.key.millisecondsSinceEpoch.toDouble();
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8),
-      child: LineChart(
-        LineChartData(
-          gridData: const FlGridData(show: false),
-          titlesData: FlTitlesData(
-            leftTitles: AxisTitles(
-                sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 40,
-                    getTitlesWidget: (value, meta) {
-                      if (value == meta.max || value == meta.min) return const SizedBox();
-                      return Text(value.toInt().toString(),
-                          style: theme.textTheme.bodySmall
-                              ?.copyWith(color: theme.hintColor));
-                    })),
-            bottomTitles: AxisTitles(
-                sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 32,
-                    interval: (maxX - minX) / (dailyData.length > 1 ? dailyData.length - 1 : 1),
-                    getTitlesWidget: (value, meta) {
-                      if (value > maxX || value < minX) {
-                        return const SizedBox.shrink();
-                      }
-                      final date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
-                      return Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Text(DateFormat('d MMM').format(date),
-                              style: theme.textTheme.bodySmall
-                                  ?.copyWith(color: theme.hintColor)));
-                    })),
-            topTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false)),
-            rightTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false)),
-          ),
-          minY: 0,
-          maxY: maxY.ceilToDouble(),
-          minX: minX,
-          maxX: maxX,
-          borderData: FlBorderData(show: false),
-          lineBarsData: [
-            LineChartBarData(
-              spots: spots,
-              isCurved: true,
-              gradient: LinearGradient(colors: [
-                theme.colorScheme.primary,
-                theme.colorScheme.secondary
-              ]),
-              barWidth: 4,
-              isStrokeCapRound: true,
-              dotData: const FlDotData(show: true),
-              belowBarData: BarAreaData(
-                show: true,
-                gradient: LinearGradient(colors: [
-                  theme.colorScheme.primary.withValues(alpha: 0.18),
-                  theme.colorScheme.secondary.withValues(alpha: 0.02)
-                ]),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _ProgressTrackingCard extends StatelessWidget {
   final PerformanceSession session;
   final PerformanceSession? previousBestSession;
@@ -467,7 +636,6 @@ class _ProgressTrackingCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                // Improvement Circle
                 SizedBox(
                   width: 80,
                   child: CircularPercentIndicator(
@@ -531,8 +699,6 @@ class _ProgressTrackingCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-
-                // Score Comparison
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -549,7 +715,6 @@ class _ProgressTrackingCard extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Previous Best Score
                           Expanded(
                             child: Container(
                               padding: const EdgeInsets.symmetric(
@@ -579,10 +744,7 @@ class _ProgressTrackingCard extends StatelessWidget {
                               ),
                             ),
                           ),
-
                           const SizedBox(width: 12),
-
-                          // Current Score
                           Expanded(
                             child: Container(
                               padding: const EdgeInsets.symmetric(
@@ -621,7 +783,6 @@ class _ProgressTrackingCard extends StatelessWidget {
                     ],
                   ),
                 ),
-
                 const Icon(Icons.chevron_right, color: Colors.grey),
               ],
             ),
@@ -650,7 +811,7 @@ class _PersonalBestCard extends StatelessWidget {
       case 'accessibility_new':
         return Icons.accessibility_new;
       default:
-        return Icons.emoji_events; // Default icon
+        return Icons.emoji_events;
     }
   }
 

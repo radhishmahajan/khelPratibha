@@ -12,6 +12,12 @@ class GoalProvider extends ChangeNotifier {
   List<Goal> get goals => _goals;
   bool get isLoading => _isLoading;
 
+  void clearData() {
+    _goals = [];
+    notifyListeners();
+  }
+
+
   Future<void> fetchGoals() async {
     _isLoading = true;
     notifyListeners();

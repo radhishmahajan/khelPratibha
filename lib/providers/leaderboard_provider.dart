@@ -17,6 +17,12 @@ class LeaderboardProvider extends ChangeNotifier {
   List<LeaderboardEntry> get activityLeaderboard => _activityLeaderboard;
   bool get isActivityLoading => _isActivityLoading;
 
+  void clearData() {
+    _leaderboard = [];
+    _activityLeaderboard = [];
+    notifyListeners();
+  }
+
   Future<void> fetchLeaderboard() async {
     _isLoading = true;
     notifyListeners();

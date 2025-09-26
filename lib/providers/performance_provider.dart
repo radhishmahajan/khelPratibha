@@ -65,6 +65,12 @@ class PerformanceProvider extends ChangeNotifier {
     }
   }
 
+  void clearData() {
+    _performanceHistory = [];
+    _personalBests = [];
+    notifyListeners();
+  }
+
   PerformanceSession? getPreviousBestSession(PerformanceSession currentSession) {
     // Get all sessions for the same test that occurred before the current one
     final previousSessionsForTest = _performanceHistory.where((s) =>
